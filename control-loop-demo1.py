@@ -46,6 +46,8 @@ def Body():
         while not phone_connected:
             phone_connected = IsPhoneConnected()
 
+    # power off code
+
 
 
 def IsDispenserConnected(args):
