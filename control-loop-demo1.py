@@ -1,39 +1,58 @@
-import os
+import sys
 import time
+import nfc
 
-task_signal = 0
+task_signal = 1
 
 # get inputs
 
-dispenser_connected = False
-phone_in = True #temp
+#phone_reader = nfc.ContactlessFrontend('replace me')
 
-if dispenser_connected:
-    while True:
-        #get inputs
-        match (task_signal):
-            case 1:
-                #dispense
-            case 2:
-                #dispense
-            case 3:
-                #dispense
-            case 4:
-                #dispense
-            case _:
-                time.sleep(1)
+def Body():
 
-else:
     while True:
-        #get inputs
-        match (task_signal):
-            case 1:
-                # jingle
-            case 2:
-                # jingle
-            case 3:
-                # jingle
-            case 4:
-                # jingle
-            case _:
-                time.sleep(1)
+        phone_connected = True #sys.argv[1]
+
+        while phone_connected:
+            dispenser_connected = False #sys.argv[2]
+
+            if dispenser_connected:
+                #get inputs
+                match (task_signal):
+                    case 1:
+                        print("dispense")
+                    case 2:
+                        print("dispense")
+                    case 3:
+                        print("dispense")
+                    case 4:
+                        print("dispense")
+                    case _:
+                        time.sleep(1)
+            else:
+                #get inputs
+                match (task_signal):
+                    case 1:
+                        print("jingle")
+                    case 2:
+                        print("jingle")
+                    case 3:
+                        print("jingle")
+                    case 4:
+                        print("jingle")
+                    case _:
+                        time.sleep(1)
+            # delay for input signal changes
+        while not phone_connected:
+            phone_connected = IsPhoneConnected()
+
+
+
+def IsDispenserConnected(args):
+    return args[1]
+
+def IsPhoneConnected(args):
+    return args[0]
+
+if __name__ == "__main__":
+    Body()
