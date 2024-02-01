@@ -18,30 +18,28 @@ def Body():
 
             if dispenser_connected:
                 #get inputs
-                match (task_signal):
-                    case 1:
-                        print("dispense")
-                    case 2:
-                        print("dispense")
-                    case 3:
-                        print("dispense")
-                    case 4:
-                        print("dispense")
-                    case _:
-                        time.sleep(1)
+                if task_signal == 1:
+                    print("dispense")
+                elif task_signal == 2:
+                    print("dispense")
+                elif task_signal == 3:
+                    print("dispense")
+                elif task_signal == 4:
+                    print("dispense")
+                else:
+                    time.sleep(1)
             else:
                 #get inputs
-                match (task_signal):
-                    case 1:
-                        print("jingle")
-                    case 2:
-                        print("jingle")
-                    case 3:
-                        print("jingle")
-                    case 4:
-                        print("jingle")
-                    case _:
-                        time.sleep(1)
+                if task_signal == 1:
+                    print("jingle")
+                elif task_signal == 2:
+                    print("jingle")
+                elif task_signal == 3:
+                    print("jingle")
+                elif task_signal == 4:
+                    print("jingle")
+                else:
+                    time.sleep(1)
             # delay for input signal changes
         while not phone_connected:
             phone_connected = IsPhoneConnected()
