@@ -1,6 +1,43 @@
 import curses
 import time
 
+def scroll_text(stdscr, framerate, message):
+    # Initialize curses
+    curses.curs_set(0)  # Invisible cursor
+    stdscr.nodelay(1)  # Don't block I/O calls
+    stdscr.timeout(100)  # Wait 100ms for the user to press a key
+    height, width = stdscr.getmaxyx()  # Get window dimensions
+    pos = width  # Starting position of the message (far right)
+
+    # Calculate sleep time based on the frame rate
+    sleep_time = 1 / framerate
+
+    while pos > -len(message):
+        stdscr.clear()  # Clear the screen
+        # Calculate the position to display the message
+        x = pos
+        y = height // 2  # Middle of the screen
+
+        # Ensure the text position is within the screen bounds before adding it
+        if x + len(message) > 0 and x < width:
+            # Calculate the substring of the message to display
+            if x < 0:
+                display_message = message[-x:]
+                x = 0
+            elif x + len(message) > width:
+                display_message = message[:width - x]
+            else:
+                display_message = message
+
+            stdscr.addstr(y, x, display_message)  # Add text to the screen buffer
+
+        stdscr.refresh()  # Update the screen
+        time.sleep(sleep_time)  # Wait based on frame rate to create the scrolling effect
+        pos -= 1  # Move the message to the left
+
+    stdscr.getch()  # Wait for a key press
+    curses.endwin()  # Clean up and return terminal to previous state
+
 # Initialize global variables
 phone_connected = False
 dispenser_connected = False
@@ -29,19 +66,19 @@ def draw_menu(stdscr):
             task_signal = k - ord('0')
 
         # Render the UI
-        stdscr.addstr(1, 1, '****************************************************')
-        stdscr.addstr(2, 1, '*                                                  *')
-        stdscr.addstr(3, 1, '*    Phone connected: [{:<5}]                      *'.format(str(phone_connected)))
-        stdscr.addstr(4, 1, '*    Dispenser connected: [{:<5}]                  *'.format(str(dispenser_connected)))
-        stdscr.addstr(5, 1, '*    Task signal: [{:<2}]                             *'.format(task_signal))
-        stdscr.addstr(6, 1, '*                                                  *')
-        stdscr.addstr(7, 1, '*    Press "p" to toggle phone connection          *')
-        stdscr.addstr(8, 1, '*    Press "d" to toggle dispenser connection      *')
-        stdscr.addstr(9, 1, '*    Press numbers (0-4) to change task signal     *')
-        stdscr.addstr(10, 1, '*    Press "s" to send pulse                       *')
-        stdscr.addstr(11, 1, '*    Press "q" to quit                             *')
-        stdscr.addstr(12, 1, '*                                                  *')
-        stdscr.addstr(13, 1, '****************************************************')
+        stdscr.addstr(1, 1, '**************************************************')
+        stdscr.addstr(2, 1, '*                                                *')
+        stdscr.addstr(3, 1, '*    Phone connected: [{:<5}]                    *'.format(str(phone_connected)))
+        stdscr.addstr(4, 1, '*    Dispenser connected: [{:<5}]                *'.format(str(dispenser_connected)))
+        stdscr.addstr(5, 1, '*    Task signal: [{:<2}]                           *'.format(task_signal))
+        stdscr.addstr(6, 1, '*                                                *')
+        stdscr.addstr(7, 1, '*    "p" toggles phone connection                *')
+        stdscr.addstr(8, 1, '*    "d" toggles dispenser connection            *')
+        stdscr.addstr(9, 1, '*    Numbers (0-4) change task signal            *')
+        stdscr.addstr(10, 1, '*    "s" to sends task pulse                    *')
+        stdscr.addstr(11, 1, '*    Press "q" to quit                          *')
+        stdscr.addstr(12, 1, '*                                               *')
+        stdscr.addstr(13, 1, '*************************************************')
 
         # Refresh the screen
         stdscr.refresh()
@@ -57,19 +94,22 @@ def perform_action(stdscr, height, width):
     global task_signal, dispenser_connected
 
     if phone_connected:
-        action = 'Jingling' if not dispenser_connected else 'Dispensing'
-        message = '{} at strength: {} '.format(action, task_signal)
+        if not dispenser_connected:
+            scroll_text(stdscr, 60, "Task (Level {}) Complete!".format(task_signal))
+        else:
+            action = 'Jingling' if not dispenser_connected else 'Dispensing'
+            message = '{} at strength: {} '.format(action, task_signal)
 
-        # Display the action message
-        stdscr.addstr(height - 2, 2, message + " " * (width - len(message) - 3))
-        stdscr.refresh()
+            # Display the action message
+            stdscr.addstr(height - 2, 2, message + " " * (width - len(message) - 3))
+            stdscr.refresh()
 
-        # Make the message appear on the UI for only a second
-        time.sleep(1)
+            # Make the message appear on the UI for only a second
+            time.sleep(1)
 
-        # Clear the message
-        stdscr.addstr(height - 2, 2, " " * (width - 3))
-        stdscr.refresh()
+            # Clear the message
+            stdscr.addstr(height - 2, 2, " " * (width - 3))
+            stdscr.refresh()
 
 def main():
     curses.wrapper(draw_menu)
