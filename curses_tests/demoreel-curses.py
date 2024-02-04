@@ -88,8 +88,6 @@ def draw_menu(stdscr):
             perform_action(stdscr, height, width, phone_connected, dispenser_connected, task_signal)
 
 def perform_action(stdscr, height, width, phone_connected, dispenser_connected, task_signal):
-    
-
     if phone_connected:
         if not dispenser_connected:
             scroll_text(stdscr, 60, "Task (Level {}) Complete!".format(task_signal))
@@ -108,9 +106,49 @@ def perform_action(stdscr, height, width, phone_connected, dispenser_connected, 
             stdscr.addstr(height - 2, 2, " " * (width - 3))
             stdscr.refresh()
 
+def play_video(stdscr, framerate, frames_file='DemoVideoFrames.txt'):
+    # Set getch to non-blocking
+    stdscr.nodelay(True)
+
+    # Read the frames from the file
+    with open(frames_file, 'r') as file:
+        content = file.read()
+
+    # Split the content by the unique delimiter to get each frame
+    frames = content.split('<--frame-->\n')[:-1]  # The last split is empty
+
+    # Calculate sleep time based on the frame rate
+    sleep_time = 1 / framerate
+
+    # Get the size of the terminal window and adjust to avoid the edges
+    height, width = stdscr.getmaxyx()
+    height -= 1
+    width -= 1
+    
+    for frame in frames:
+        stdscr.clear()  # Clear the screen
+
+        # Split the frame into lines
+        lines = frame.split('\n')
+
+        # Display each line in the frame, making sure not to exceed the screen's boundaries
+        for i, line in enumerate(lines):
+            if i < height - 1:  # Avoid writing to the last line
+                # Truncate line to fit screen's width and avoid the last column
+                stdscr.addstr(i, 0, line[:width - 1])
+
+        # If the user presses 'q', exit the video
+        if stdscr.getch() == ord('q'):
+            break
+        stdscr.refresh()  # Refresh the screen
+        time.sleep(sleep_time)  # Wait for the frame duration
+
+    stdscr.getch()
+    curses.endwin()
+
 def menu_select(stdscr):
     curses.curs_set(0)  # Hide the cursor
-    options = ["Simple 'Task Complete'", "Basic Menu", "Not implemented", "Not implemented", "Quit"]
+    options = ["Simple 'Task Complete'", "Basic Menu", "Video Playback ([q] to end)", "Not implemented", "Quit"]
     current_row = 0
 
     while True:
@@ -143,6 +181,8 @@ def menu_select(stdscr):
                 scroll_text(stdscr, 30)
             elif current_row == 1:
                 draw_menu(stdscr)
+            elif current_row == 2:
+                play_video(stdscr, 30)
             elif current_row == 4:
                 break
 
