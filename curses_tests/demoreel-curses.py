@@ -39,6 +39,41 @@ def scroll_text(stdscr, framerate):
     stdscr.getch()  # Wait for a key press
     curses.endwin()  # Clean up and return terminal to previous state
 
-# Initialize curses and set the frame rate
-framerate = 24  # Frames per second
-curses.wrapper(scroll_text, framerate)
+def menu_select(stdscr):
+    curses.curs_set(0)  # Hide the cursor
+    options = ["Option 1", "Option 2", "Option 3", "Option 4", "Option 5"]
+    current_row = 0
+
+    while True:
+        stdscr.clear()
+
+        h, w = stdscr.getmaxyx()  # Get the window's height and width
+
+        for idx, option in enumerate(options):
+            x = w//2 - len(option)//2
+            y = h//2 - len(options)//2 + idx
+            if idx == current_row:
+                stdscr.attron(curses.color_pair(1))
+                stdscr.addstr(y, x, option)
+                stdscr.attroff(curses.color_pair(1))
+            else:
+                stdscr.addstr(y, x, option)
+
+        stdscr.refresh()
+
+        key = stdscr.getch()
+
+        if key == curses.KEY_UP and current_row > 0:
+            current_row -= 1
+        elif key == curses.KEY_DOWN and current_row < len(options) - 1:
+            current_row += 1
+        elif key == curses.KEY_ENTER or key in [10, 13]:
+            scroll_text(stdscr, options[current_row])  # Call the animation function
+            # Return or break here if you want to exit after selecting an option
+            # return or break
+
+def main():
+    curses.wrapper(menu_select)
+
+if __name__ == "__main__":
+    main()
