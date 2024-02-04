@@ -86,10 +86,10 @@ def draw_menu(stdscr):
 
         # Send pulse if 's' is pressed
         if k == ord('s'):
-            perform_action(stdscr, height, width)
+            perform_action(stdscr, height, width, phone_connected, dispenser_connected, task_signal)
 
-def perform_action(stdscr, height, width):
-    global task_signal, dispenser_connected
+def perform_action(stdscr, height, width, phone_connected, dispenser_connected, task_signal):
+    
 
     if phone_connected:
         if not dispenser_connected:
