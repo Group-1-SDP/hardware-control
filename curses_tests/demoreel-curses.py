@@ -39,7 +39,13 @@ def scroll_text(stdscr, framerate, message="Task Complete!"):
     curses.endwin()  # Clean up and return terminal to previous state
 
 def add_task(stdscr):
-    while k!= ord('q'): # Press 'q' to exit
+    #k = 0
+    # Refresh the screen
+    stdscr.refresh()
+
+    # Wait for next input
+    #k = stdscr.getch()
+    while True: #k!= ord('q'): # Press 'q' to exit
         #Initialization
         stdscr.clear()
         height, width = stdscr.getmaxyx()
@@ -62,9 +68,8 @@ def add_task(stdscr):
          # Refresh the screen
         stdscr.refresh()
 
-        # Wait for next input
-        k = stdscr.getch()
-
+        if stdscr.getch() == ord('q'):
+            break
 
 def draw_menu(stdscr):
     phone_connected = False
