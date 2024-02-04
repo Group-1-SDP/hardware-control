@@ -1,13 +1,12 @@
 import curses
 import time
 
-def scroll_text(stdscr, framerate):
+def scroll_text(stdscr, framerate, message="Task Complete!"):
     # Initialize curses
     curses.curs_set(0)  # Invisible cursor
     stdscr.nodelay(1)  # Don't block I/O calls
     stdscr.timeout(100)  # Wait 100ms for the user to press a key
     height, width = stdscr.getmaxyx()  # Get window dimensions
-    message = "Task Complete!"
     pos = width  # Starting position of the message (far right)
 
     # Calculate sleep time based on the frame rate
