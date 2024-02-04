@@ -38,26 +38,65 @@ def scroll_text(stdscr, framerate, message="Task Complete!"):
     stdscr.getch()  # Wait for a key press
     curses.endwin()  # Clean up and return terminal to previous state
 
+def scroll_text_line(stdscr, y, x_start, x_end, message, framerate):
+    pos = x_end  # Starting position of the message (far right)
+
+    # Calculate sleep time based on the frame rate
+    sleep_time = 1 / framerate
+
+    while pos > x_start - len(message):
+        # Clear the previous message (optional, depending on your requirements)
+        stdscr.addstr(y, x_start, ' ' * (x_end - x_start))
+        
+        # Calculate the position to display the message
+        x = pos
+        if x + len(message) > x_start and x < x_end:
+            # Calculate the substring of the message to display
+            if x < x_start:
+                display_message = message[-x + x_start:]
+                x = x_start
+            elif x + len(message) > x_end:
+                display_message = message[:x_end - x]
+            else:
+                display_message = message
+
+            stdscr.addstr(y, x, display_message)  # Add text to the screen buffer
+
+        stdscr.refresh()  # Update the screen
+        time.sleep(sleep_time)  # Wait based on frame rate to create the scrolling effect
+        pos -= 1  # Move the message to the left
+
 def add_task(stdscr):
-    #k = 0
+
+    task_input = ""
+    task_parts = []
+
     # Refresh the screen
     stdscr.refresh()
 
+    key = 0
+    awaiting_task = True
+    awaiting_importance = False
+
     # Wait for next input
-    #k = stdscr.getch()
-    while True: #k!= ord('q'): # Press 'q' to exit
+
+    while (awaiting_task or awaiting_importance):
         #Initialization
         stdscr.clear()
         height, width = stdscr.getmaxyx()
+
 
            # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
         stdscr.addstr(2, 1, '*                                                *')
         stdscr.addstr(3, 1, '*                                                *')
         stdscr.addstr(4, 1, '*                                                *')
-        stdscr.addstr(5, 1, '*                                                *')
+        if awaiting_task == True:
+            stdscr.addstr(5, 1, '* Task: ' + task_input.ljust(width - 10) + '     *')
+        if awaiting_importance == True:
+            stdscr.addstr(5, 1, '* Task importance (0-4): ' + task_input.ljust(width - 10) + '*')
         stdscr.addstr(6, 1, '*                                                *')
-        stdscr.addstr(7, 1, '*                   :3                           *')
+        stdscr.addstr(7, 1, '* key: '+ str(key) +'                            *')
         stdscr.addstr(8, 1, '*                                                *')
         stdscr.addstr(9, 1, '*                                                *')
         stdscr.addstr(10, 1, '*                                               *')
@@ -68,14 +107,46 @@ def add_task(stdscr):
          # Refresh the screen
         stdscr.refresh()
 
-        if stdscr.getch() == ord('q'):
-            break
+        key = stdscr.getch()
+
+        if awaiting_task:    
+            
+        # Process user text input while awaiting task
+            if key in [10, 13]:  # Enter key to submit the task
+                if(task_input == "quit"):
+                    break
+                else:
+                    awaiting_importance = True
+                    awaiting_task = False
+                    task_parts.append(task_input) #this one
+                    task_input = ""
+            else:
+                task_input += chr(key)
+        elif awaiting_importance:
+            if ord('0') <= key <= ord('4'):
+                task_parts.append(task_input)
+                task_input = chr(key)
+            elif key in [10, 13]:
+                task_parts.append(task_input) # this one
+                task_input = ""
+                awaiting_importance = False
+        elif key == 263:  # Backspace key to delete characters
+            task_input = task_input[:-1]
+        elif key == curses.KEY_RIGHT and cursor_x < width - 11:
+            cursor_x += 1
+        elif key == curses.KEY_LEFT and cursor_x > 1:
+            cursor_x -= 1
+
+    task_tuple = tuple((task_parts[0], task_parts[1]))
+    return task_tuple
 
 def draw_menu(stdscr):
     phone_connected = False
     dispenser_connected = False
     task_signal = 1
     k = 0
+
+    tasks = []
 
     # Start colors in curses
     curses.start_color()
@@ -95,7 +166,8 @@ def draw_menu(stdscr):
         elif ord('0') <= k <= ord('4'):
             task_signal = k - ord('0')
         elif k == ord('z'):
-            add_task(stdscr)
+            task = add_task(stdscr)
+            tasks.append(task)
 
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
@@ -103,7 +175,7 @@ def draw_menu(stdscr):
         stdscr.addstr(3, 1, '*    Phone connected: [{:<5}]                    *'.format(str(phone_connected)))
         stdscr.addstr(4, 1, '*    Dispenser connected: [{:<5}]                *'.format(str(dispenser_connected)))
         stdscr.addstr(5, 1, '*    Task signal: [{:<2}]                           *'.format(task_signal))
-        stdscr.addstr(6, 1, '*                                                *')
+        stdscr.addstr(6, 1, '*    Tasks:                                           *')
         stdscr.addstr(7, 1, '*    "p" toggles phone connection                *')
         stdscr.addstr(8, 1, '*    "d" toggles dispenser connection            *')
         stdscr.addstr(9, 1, '*    Numbers (0-4) change task signal            *')
@@ -140,6 +212,45 @@ def perform_action(stdscr, height, width, phone_connected, dispenser_connected, 
             # Clear the message
             stdscr.addstr(height - 2, 2, " " * (width - 3))
             stdscr.refresh()
+
+def draw_menu_live_ticker(stdscr):
+    messages = {
+        '1': "I'm message 1, look at me!",
+        '2': "I'm message 2, aren't I pretty?",
+        '3': "I'm message 3, I'm the best!",
+    }
+    framerate = 15
+    current_message = messages['1']
+    
+    while True:
+        #Initialization
+        stdscr.clear()
+        height, width = stdscr.getmaxyx()
+
+           # Render the UI
+        stdscr.addstr(1, 1,  '**************************************************')
+        stdscr.addstr(2, 1,  '*             Cem\'s ticker example               *')
+        stdscr.addstr(3, 1,  '**************************************************')
+        stdscr.addstr(4, 1,  '*                                                *')
+        stdscr.addstr(5, 1,  '*                                                *')
+        stdscr.addstr(6, 1,  '*                                                *')
+        stdscr.addstr(7, 1,  '*                                                *')
+        stdscr.addstr(8, 1,  '*                       [WIP]                    *')
+        stdscr.addstr(9, 1,  '*                                                *')
+        stdscr.addstr(10, 1, '*                                                *')
+        stdscr.addstr(11, 1, '*                                                *')
+        stdscr.addstr(12, 1, '*                                                *')
+        stdscr.addstr(13, 1, '*************************************************')
+
+         # Refresh the screen
+        stdscr.refresh()
+
+        key = stdscr.getch()
+        if chr(key) in messages:
+            current_message = messages[chr(key)]
+            scroll_text_line(stdscr, 2, 2, width, current_message, framerate)
+        elif key == ord('q'):
+            break
 
 def play_video(stdscr, framerate, frames_file='DemoVideoFrames.txt'):
     # Set getch to non-blocking
@@ -183,7 +294,7 @@ def play_video(stdscr, framerate, frames_file='DemoVideoFrames.txt'):
 
 def menu_select(stdscr):
     curses.curs_set(0)  # Hide the cursor
-    options = ["Simple 'Task Complete'", "Basic Menu", "Video Playback ([q] to end)", "Not implemented", "Quit"]
+    options = ["Simple 'Task Complete'", "Basic Menu", "Video Playback ([q] to end)", "Fancier menu", "Quit"]
     current_row = 0
 
     while True:
@@ -218,6 +329,8 @@ def menu_select(stdscr):
                 draw_menu(stdscr)
             elif current_row == 2:
                 play_video(stdscr, 30)
+            elif current_row == 3:
+                draw_menu_live_ticker(stdscr)
             elif current_row == 4:
                 break
 
