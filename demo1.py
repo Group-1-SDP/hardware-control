@@ -1,6 +1,10 @@
 import curses
 import time
-import threading
+import threading # threading? really?
+# Yes. The timer needs to constantly run, but the text needs to scroll
+# independently of the timer. This allows two seperate time.sleep() calls
+# to update different aspects of the screen at different rates.
+# This will also be used to handle our concurrency for integrating more parts
 
 def scroll_text_line(stdscr, y, x_start, x_end, message, framerate, stop_event):
     pos = x_end  # Starting position of the message (far right)
