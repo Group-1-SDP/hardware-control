@@ -97,13 +97,13 @@ def sevenSegmentASCII(num):
     return digits[num]
 
 colon = """
-        
-   ***  
-   ***  
-        
-   ***  
-   ***  
-        
+      
+   ***
+   ***
+      
+   ***
+   ***
+      
     """
 
 def nums_side_by_side(*args):
@@ -126,10 +126,41 @@ def print_lines(lines):
     for line in lines:
         print(line)
 
-def main():
-    FourteenOhSeven = nums_side_by_side(sevenSegmentASCII(1), sevenSegmentASCII(4), colon, sevenSegmentASCII(0), sevenSegmentASCII(7))
-    print_lines(FourteenOhSeven)
+def display_time(stdscr):
+    curses.curs_set(0)
+    stdscr.nodelay(True) # Stop getch() from blocking program execution
+    while True:
+        timer = time.strftime("%M:%S")
+        digit1 = int(timer[0])
+        digit2 = int(timer[1])
+        digit3 = int(timer[3])
+        digit4 = int(timer[4])
+        time_line_array = nums_side_by_side(sevenSegmentASCII(digit1), sevenSegmentASCII(digit2), colon, sevenSegmentASCII(digit3), sevenSegmentASCII(digit4))
 
+        # Start of screen stuff
+        stdscr.clear()
+        height, width = stdscr.getmaxyx()
+
+        stdscr.addstr(1, 1,  '*****************************************************')
+        stdscr.addstr(2, 1,  '*             Cem\'s ticker example                  *')
+        stdscr.addstr(3, 1,  '*****************************************************')
+        stdscr.addstr(4, 1,  time_line_array[1])
+        stdscr.addstr(5, 1,  time_line_array[2])
+        stdscr.addstr(6, 1,  time_line_array[3])
+        stdscr.addstr(7, 1,  time_line_array[4])
+        stdscr.addstr(8, 1,  time_line_array[5])
+        stdscr.addstr(9, 1,  time_line_array[6])
+        stdscr.addstr(10, 1, time_line_array[7])
+        stdscr.addstr(11, 1, '*****************************************************')
+
+        stdscr.refresh()
+        if stdscr.getch() == ord('q'):
+            break
+
+        time.sleep(0.1)
+
+def main():
+    curses.wrapper(display_time)
 
 if __name__ == "__main__":
     main()
