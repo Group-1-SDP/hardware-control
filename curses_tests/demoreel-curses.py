@@ -1,5 +1,6 @@
 import curses
 import time
+from nfc import NfcReader
 
 def scroll_text(stdscr, framerate, message="Task Complete!"):
     # Initialize curses
@@ -32,6 +33,7 @@ def scroll_text(stdscr, framerate, message="Task Complete!"):
             stdscr.addstr(y, x, display_message)  # Add text to the screen buffer
 
         stdscr.refresh()  # Update the screen
+
         time.sleep(sleep_time)  # Wait based on frame rate to create the scrolling effect
         pos -= 1  # Move the message to the left
 
@@ -87,22 +89,22 @@ def add_task(stdscr):
 
 
            # Render the UI
-        stdscr.addstr(1, 1, '**************************************************')
-        stdscr.addstr(2, 1, '*                                                *')
-        stdscr.addstr(3, 1, '*                                                *')
-        stdscr.addstr(4, 1, '*                                                *')
+        stdscr.addstr(1, 1, '****************************')
+        stdscr.addstr(2, 1, '*                          *')
+        stdscr.addstr(3, 1, '*                          *')
+        stdscr.addstr(4, 1, '*                          *')
         if awaiting_task == True:
             stdscr.addstr(5, 1, '* Task: ' + task_input.ljust(width - 10) + '     *')
         if awaiting_importance == True:
             stdscr.addstr(5, 1, '* Task importance (0-4): ' + task_input.ljust(width - 10) + '*')
-        stdscr.addstr(6, 1, '*                                                *')
-        stdscr.addstr(7, 1, '* key: '+ str(key) +'                            *')
-        stdscr.addstr(8, 1, '*                                                *')
-        stdscr.addstr(9, 1, '*                                                *')
-        stdscr.addstr(10, 1, '*                                               *')
-        stdscr.addstr(11, 1, '*                                               *')
-        stdscr.addstr(12, 1, '*                                               *')
-        stdscr.addstr(13, 1, '*************************************************')
+        stdscr.addstr(6, 1, '*                                          *')
+        stdscr.addstr(7, 1, '* key: '+ str(key) +'                      *')
+        stdscr.addstr(8, 1, '*                                          *')
+        stdscr.addstr(9, 1, '*                                          *')
+        stdscr.addstr(10, 1, '*                                         *')
+        stdscr.addstr(11, 1, '*                                         *')
+        stdscr.addstr(12, 1, '*                                         *')
+        #stdscr.addstr(13, 1, '****************************************** ')
 
          # Refresh the screen
         stdscr.refresh()
@@ -145,8 +147,13 @@ def draw_menu(stdscr):
     dispenser_connected = False
     task_signal = 1
     k = 0
+    stdscr.nodelay(1)
 
     tasks = []
+
+    # init nfc reader
+
+    nfcReader = NfcReader()
 
     # Start colors in curses
     curses.start_color()
@@ -159,9 +166,14 @@ def draw_menu(stdscr):
         height, width = stdscr.getmaxyx()
 
         # Handle input
-        if k == ord('p'):
-            phone_connected = not phone_connected
-        elif k == ord('d'):
+
+        if nfcReader.get_reading():
+            phone_connected = True
+        else:
+            phone_connected = False
+        #if k == ord('p'):
+        #    phone_connected = not phone_connected
+        if k == ord('d'):
             dispenser_connected = not dispenser_connected
         elif ord('0') <= k <= ord('4'):
             task_signal = k - ord('0')
@@ -172,18 +184,27 @@ def draw_menu(stdscr):
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
         stdscr.addstr(2, 1, '*                                                *')
-        stdscr.addstr(3, 1, '*    Phone connected: [{:<5}]                    *'.format(str(phone_connected)))
-        stdscr.addstr(4, 1, '*    Dispenser connected: [{:<5}]                *'.format(str(dispenser_connected)))
-        stdscr.addstr(5, 1, '*    Task signal: [{:<2}]                           *'.format(task_signal))
-        stdscr.addstr(6, 1, '*    Tasks:                                           *')
-        stdscr.addstr(7, 1, '*    "p" toggles phone connection                *')
-        stdscr.addstr(8, 1, '*    "d" toggles dispenser connection            *')
-        stdscr.addstr(9, 1, '*    Numbers (0-4) change task signal            *')
-        stdscr.addstr(10, 1, '*    "s" to sends task pulse                    *')
-        stdscr.addstr(11, 1, '*    Press "q" to quit                          *')
-        stdscr.addstr(12, 1, '*                                               *')
-        stdscr.addstr(13, 1, '*************************************************')
-
+        stdscr.addstr(3, 1, '*  Phone connected: [{:<5}]                      *'.format(str(phone_connected)))
+        stdscr.addstr(4, 1, '*  Dispenser connected: [{:<5}]                  *'.format(str(dispenser_connected)))
+        stdscr.addstr(5, 1, '*  Task signal: [{:<5}]                          *'.format(task_signal))
+        stdscr.addstr(6, 1, '*  Tasks:                                        *')
+        stdscr.addstr(7, 1, '* "d" toggles dispenser connection               *')
+        stdscr.addstr(8, 1, '* Press "q" to quit                              *')
+        stdscr.addstr(9, 1, '* Numbers 0-4 change task, "s" does task pulse   *')
+        stdscr.addstr(10, 1,'*                                                *')
+        if phone_connected == True:
+            stdscr.addstr(11, 1,'*   _______                                      *')
+            stdscr.addstr(12, 1,'*  |       |             /                       *')
+            stdscr.addstr(13, 1,'*  |       |            /                        *')
+            stdscr.addstr(14, 1,'*  |       |           /                         *')
+            stdscr.addstr(15, 1,'*  |       |     \    /                          *')
+            stdscr.addstr(16, 1,'*  |       |      \  /                           *')
+            stdscr.addstr(17, 1,'*  |_______|       \/                            *')
+        else:
+            for i in range(11, 18):
+                stdscr.addstr(i, 1,'*                                                *')
+        stdscr.addstr(18, 1,'*                                                *')
+        stdscr.addstr(19, 1,'**************************************************')
         # Refresh the screen
         stdscr.refresh()
 
