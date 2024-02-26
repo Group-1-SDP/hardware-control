@@ -1,6 +1,6 @@
 import curses
 import time
-from nfc import NfcReader
+#from nfc import NfcReader
 
 def scroll_text(stdscr, framerate, message="Task Complete!"):
     # Initialize curses
@@ -153,7 +153,7 @@ def draw_menu(stdscr):
 
     # init nfc reader
 
-    nfcReader = NfcReader()
+    #nfcReader = NfcReader()
 
     # Start colors in curses
     curses.start_color()
@@ -167,10 +167,10 @@ def draw_menu(stdscr):
 
         # Handle input
 
-        if nfcReader.get_reading():
-            phone_connected = True
-        else:
-            phone_connected = False
+       # if nfcReader.get_reading():
+        phone_connected = True
+        #else:
+        #    phone_connected = False
         #if k == ord('p'):
         #    phone_connected = not phone_connected
         if k == ord('d'):
