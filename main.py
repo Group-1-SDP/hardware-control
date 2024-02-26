@@ -8,6 +8,8 @@ import threading # threading? really?
 # to update different aspects of the screen at different rates.
 # This will also be used to handle our concurrency for integrati
 
+time_in_secs = 0
+
 def sevenSegmentASCII(num):
     """Function that returns an ASCII representation of the time in seven segment display style"""
     zero = """
@@ -129,22 +131,16 @@ def nums_side_by_side(*args):
         array_of_lines.append(''.join(line_parts))
     return array_of_lines
 
-def display_time(stdscr, time_in_secs, phone_connected, nfcReader):
-    curses.curs_set(0)
-    stdscr.nodelay(True) # Stop getch() from blocking program execution
 
-    messages = {
-        '1': "Phone connected",
-        '2': "Phone disconnected",
-        '3': "Pavel just completed 10 tasks!",
-        '4': "New task added: 'Impress judges at Demo 1!'"
-    }
+def update_time(stop_event, start_time):
+    global time_in_secs
+    while not stop_event.is_set():
+        time_in_secs = int(time.time() - start_time)
+        time.sleep(1)
 
-    threads = []
-    stop_events = []
-
-    while nfcReader.get_reading():
-        # Convert time_in_secs to minutes and seconds
+def update_display(stdscr, stop_event):
+    global time_in_secs
+    while not stop_event.is_set():
         timer = time.strftime("%M:%S", time.gmtime(time_in_secs))
         digit1 = int(timer[0])
         digit2 = int(timer[1])
@@ -169,30 +165,39 @@ def display_time(stdscr, time_in_secs, phone_connected, nfcReader):
         stdscr.addstr(11, 1, '*****************************************************')
 
         stdscr.refresh()
-        keypress = stdscr.getch()
-        if keypress == ord('q'):
-            # Signal all threads to stop
-            for event in stop_events:
-                event.set()
-            # Wait for all threads to finish
-            for thread in threads:
-                thread.join()
-            break
-        elif keypress in (ord('1'), ord('2'), ord('3'), ord('4')):
-            # I would love to use "if chr(keypress) in messages" but that causes
-            # a stupid chr error. This is the best workaround, which sucks.
-
-            # threading
-            stop_event = threading.Event()
-            stop_events.append(stop_event)
-            # more threading
-            message_key = chr(keypress)
-            new_thread = threading.Thread(target=scroll_text_line, args=(stdscr, 2, 2, width-1, messages[message_key], 20, stop_event))
-            threads.append(new_thread)
-            new_thread.start()
-
         time.sleep(1)
-        time_in_secs += 1
+
+def display_time(stdscr, phone_connected, nfcReader):
+    curses.curs_set(0)
+    stdscr.nodelay(True) # Stop getch() from blocking program execution
+
+    messages = {
+        '1': "Phone connected",
+        '2': "Phone disconnected",
+        '3': "Pavel just completed 10 tasks!",
+        '4': "New task added: 'Impress judges at Demo 1!'"
+    }
+
+    threads = []
+    stop_events = []
+
+    start_time = time.time()
+    stop_event = threading.Event()
+
+    time_thread = threading.Thread(target=update_time, args=(stop_event, start_time))
+    display_thread = threading.Thread(target=update_display, args=(stdscr, stop_event))
+    time_thread.start()
+    display_thread.start()
+
+    while nfcReader.get_reading():
+        # Convert time_in_secs to minutes and seconds
+
+        global time_in_secs
+
+
+    stop_event.set()
+    time_thread.join()
+    display_thread.join()
 
 def draw_menu(stdscr):
     phone_connected = False
@@ -224,7 +229,7 @@ def draw_menu(stdscr):
         if nfcReader.get_reading():
             phone_connected = True
             requests.post(url + "phoneConnected")
-            display_time(stdscr, 0, phone_connected, nfcReader)
+            display_time(stdscr, phone_connected, nfcReader)
         else:
             phone_connected = False
             requests.post(url + "phoneDisconnected")
@@ -277,3 +282,28 @@ def main():
 
 if __name__ == "__main__":    
     main()
+
+
+
+
+''' keypress = stdscr.getch()
+if keypress == ord('q'):
+    # Signal all threads to stop
+    for event in stop_events:
+        event.set()
+    # Wait for all threads to finish
+    for thread in threads:
+        thread.join()
+    break
+elif keypress in (ord('1'), ord('2'), ord('3'), ord('4')):
+    # I would love to use "if chr(keypress) in messages" but that causes
+    # a stupid chr error. This is the best workaround, which sucks.
+
+    # threading
+    stop_event = threading.Event()
+    stop_events.append(stop_event)
+    # more threading
+    message_key = chr(keypress)
+    new_thread = threading.Thread(target=scroll_text_line, args=(stdscr, 2, 2, width-1, messages[message_key], 20, stop_event))
+    threads.append(new_thread)
+    new_thread.start()'''
