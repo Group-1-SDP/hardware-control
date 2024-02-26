@@ -182,10 +182,10 @@ def display_time(stdscr, time_in_secs, phone_connected, nfcReader):
             # I would love to use "if chr(keypress) in messages" but that causes
             # a stupid chr error. This is the best workaround, which sucks.
 
-            # threading shit
+            # threading
             stop_event = threading.Event()
             stop_events.append(stop_event)
-            # more threading shit
+            # more threading
             message_key = chr(keypress)
             new_thread = threading.Thread(target=scroll_text_line, args=(stdscr, 2, 2, width-1, messages[message_key], 20, stop_event))
             threads.append(new_thread)
@@ -199,7 +199,7 @@ def draw_menu(stdscr):
     dispenser_connected = False
     task_signal = 1
     k = 0
-    url="http://172.21.12.173:5000/websocket/"
+    url="https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev/websocket/"
 
     stdscr.nodelay(1)
 
