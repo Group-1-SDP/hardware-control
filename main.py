@@ -2,11 +2,13 @@ import curses
 import requests
 import time
 from nfc import NfcReader
+import grove_servo 
 import threading # threading? really?
 # Yes. The timer needs to constantly run, but the text needs to scroll
 # independently of the timer. This allows two seperate time.sleep() calls
 # to update different aspects of the screen at different rates.
 # This will also be used to handle our concurrency for integrati
+import socketio 
 
 def sevenSegmentASCII(num):
     """Function that returns an ASCII representation of the time in seven segment display style"""
@@ -203,6 +205,9 @@ def draw_menu(stdscr):
 
     stdscr.nodelay(1)
 
+    sio = socketio.Client()
+    sio.connect('https://fantastic-broccoli-p6jp6jjvpvwhrj5x-5000.app.github.dev/')
+
     tasks = []
 
     # init nfc reader
@@ -219,6 +224,8 @@ def draw_menu(stdscr):
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
+        event = sio.receive()
+
         # Handle input
 
         if nfcReader.get_reading():
@@ -228,8 +235,7 @@ def draw_menu(stdscr):
         else:
             phone_connected = False
             requests.post(url + "phoneDisconnected")
-        #if k == ord('p'):
-        #    phone_connected = not phone_connected
+
         if k == ord('d'):
             dispenser_connected = not dispenser_connected
         elif ord('0') <= k <= ord('4'):
@@ -237,6 +243,10 @@ def draw_menu(stdscr):
         elif k == ord('z'):
             task = add_task(stdscr)
             tasks.append(task)
+
+        if dispenser_connected:
+            if event[0] == 'task-completed':
+                grove_servo.main()
 
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
