@@ -3,6 +3,8 @@ import requests
 import time
 from nfc import NfcReader
 import threading
+import socketio
+import grove_servo
 
 #we need threading to run the time and the display at the same time; otherwise there will be noticeable lag.
 
@@ -210,6 +212,9 @@ def draw_menu(stdscr):
 
     tasks = []
 
+    sio = socketio.Client()
+    sio.connect('http://localhost:5000')
+
     # init nfc reader
 
     nfcReader = NfcReader()
@@ -223,6 +228,8 @@ def draw_menu(stdscr):
         # Initialization
         stdscr.clear()
         height, width = stdscr.getmaxyx()
+
+        event = sio.receive()
 
         # Handle input
 
@@ -242,6 +249,9 @@ def draw_menu(stdscr):
         elif k == ord('z'):
             task = add_task(stdscr)
             tasks.append(task)
+
+        if event == 'task-complete':
+            grove_servo.main()
 
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
