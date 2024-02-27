@@ -152,36 +152,26 @@ def update_display(stdscr, stop_event):
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        stdscr.addstr(1, 1,  '*****************************************************')
-        stdscr.addstr(2, 1,  '*                     Time on task                  *')
-        stdscr.addstr(3, 1,  '*****************************************************')
-        stdscr.addstr(4, 1,  time_line_array[1])
-        stdscr.addstr(5, 1,  time_line_array[2])
-        stdscr.addstr(6, 1,  time_line_array[3])
-        stdscr.addstr(7, 1,  time_line_array[4])
-        stdscr.addstr(8, 1,  time_line_array[5])
-        stdscr.addstr(9, 1,  time_line_array[6])
-        stdscr.addstr(10, 1, time_line_array[7])
-        for i in range(11, 18):
-            stdscr.addstr(i, 1, '*                                                   *')
-        stdscr.addstr(19, 1, '*****************************************************')
+        stdscr.addstr(1, 1,  '**************************************************')
+        stdscr.addstr(2, 1,  '*                     Time on task               *')
+        stdscr.addstr(3, 1,  '**************************************************')
+        stdscr.addstr(4, 0,  time_line_array[1])
+        stdscr.addstr(5, 0,  time_line_array[2])
+        stdscr.addstr(6, 0,  time_line_array[3])
+        stdscr.addstr(7, 0,  time_line_array[4])
+        stdscr.addstr(8, 0,  time_line_array[5])
+        stdscr.addstr(9, 0,  time_line_array[6])
+        stdscr.addstr(10, 0, time_line_array[7])
+        for i in range(11, 19):
+            stdscr.addstr(i, 1, '*                                                *')
+        stdscr.addstr(19, 1, '**************************************************')
 
         stdscr.refresh()
         time.sleep(1)
 
 def display_time(stdscr, phone_connected, nfcReader):
     curses.curs_set(0)
-    stdscr.nodelay(True) # Stop getch() from blocking program execution
-
-    messages = {
-        '1': "Phone connected",
-        '2': "Phone disconnected",
-        '3': "Pavel just completed 10 tasks!",
-        '4': "New task added: 'Impress judges at Demo 1!'"
-    }
-
-    threads = []
-    stop_events = []
+    stdscr.nodelay(True)
 
     start_time = time.time()
     stop_event = threading.Event()
@@ -192,8 +182,6 @@ def display_time(stdscr, phone_connected, nfcReader):
     display_thread.start()
 
     while nfcReader.get_reading():
-        # Convert time_in_secs to minutes and seconds
-
         global time_in_secs
 
 
@@ -209,8 +197,8 @@ def draw_menu(stdscr):
 
     tasks = []
 
-    sio = socketio.Client()
-    sio.connect('http://localhost:5000')
+    #sio = socketio.Client()
+    #sio.connect('http://localhost:5000')
 
     # init nfc reader
 
@@ -226,7 +214,7 @@ def draw_menu(stdscr):
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        event = sio.receive()
+        #event = sio.receive()
 
         # Handle input
 
@@ -238,31 +226,28 @@ def draw_menu(stdscr):
             phone_connected = False
             requests.post(url + "phoneDisconnected")
 
-        if event == 'task-complete':
-            grove_servo.main()
+        #if event == 'task-complete':
+        #    grove_servo.main()
 
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
         stdscr.addstr(2, 1, '*                                                *')
-        stdscr.addstr(3, 1, '*  Phone connected: [{:<5}]                      *'.format(str(phone_connected)))
-        stdscr.addstr(4, 1, '*  Dispenser connected: [{:<5}]                  *'.format(str(dispenser_connected)))
-        stdscr.addstr(5, 1, '*  Task signal: [{:<5}]                          *'.format(task_signal))
-        stdscr.addstr(6, 1, '*  Tasks:                                        *')
-        stdscr.addstr(7, 1, '* "d" toggles dispenser connection               *')
-        stdscr.addstr(8, 1, '* Press "q" to quit                              *')
-        stdscr.addstr(9, 1, '* Numbers 0-4 change task, "s" does task pulse   *')
+        stdscr.addstr(3, 1, '*                                                *')
+        stdscr.addstr(4, 1, '*                                                *')
+        stdscr.addstr(5, 1, '*                                                *')
+        stdscr.addstr(6, 1, '*                                                *')
+        stdscr.addstr(7, 1, '*                                                *')
+        stdscr.addstr(8, 1, '*                                                *')
+        stdscr.addstr(9, 1, '*                                                *')
         stdscr.addstr(10, 1,'*                                                *')
-        if phone_connected == True:
-            stdscr.addstr(11, 1,'*   _______                                      *')
-            stdscr.addstr(12, 1,'*  |       |             /                       *')
-            stdscr.addstr(13, 1,'*  |       |            /                        *')
-            stdscr.addstr(14, 1,'*  |       |           /                         *')
-            stdscr.addstr(15, 1,'*  |       |     \    /                          *')
-            stdscr.addstr(16, 1,'*  |       |      \  /                           *')
-            stdscr.addstr(17, 1,'*  |_______|       \/                            *')
-        else:
-            for i in range(11, 18):
-                stdscr.addstr(i, 1,'*                                                *')
+        stdscr.addstr(12, 1,'*                                                *')
+        stdscr.addstr(13, 1,'*                                                *')
+        stdscr.addstr(14, 1,'*                                                *')
+        stdscr.addstr(15, 1,'*                                                *')
+        stdscr.addstr(16, 1,'*                                                *')
+        stdscr.addstr(17, 1,'*                                                *')
+        #for i in range(12, 18): ignore for now.
+        #	stdscr.addstr(i, 1,'*                                                *')
         stdscr.addstr(18, 1,'*                                                *')
         stdscr.addstr(19, 1,'**************************************************')
         # Refresh the screen
