@@ -198,7 +198,7 @@ def draw_menu(stdscr):
     tasks = []
 
     sio = socketio.Client()
-    sio.connect('ws://localhost:5000')
+    sio.connect('https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev/websocket/')
 
     # init nfc reader
 
