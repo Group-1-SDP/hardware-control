@@ -197,8 +197,8 @@ def draw_menu(stdscr):
 
     tasks = []
 
-    #sio = socketio.Client()
-    #sio.connect('http://localhost:5000')
+    sio = socketio.Client()
+    sio.connect('ws://localhost:5000')
 
     # init nfc reader
 
@@ -214,7 +214,8 @@ def draw_menu(stdscr):
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        #event = sio.receive()
+        event = sio.receive()
+        print(event)
 
         # Handle input
 
@@ -226,8 +227,8 @@ def draw_menu(stdscr):
             phone_connected = False
             requests.post(url + "phoneDisconnected")
 
-        #if event == 'task-complete':
-        #    grove_servo.main()
+        if event == 'task-complete':
+            grove_servo.main()
 
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
