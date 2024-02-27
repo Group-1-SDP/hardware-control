@@ -203,9 +203,6 @@ def display_time(stdscr, phone_connected, nfcReader):
 
 def draw_menu(stdscr):
     phone_connected = False
-    dispenser_connected = False
-    task_signal = 1
-    k = 0
     url="https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev/websocket/"
 
     stdscr.nodelay(1)
@@ -224,7 +221,7 @@ def draw_menu(stdscr):
     curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
     # Loop where k is the last character pressed
-    while k != ord('q'):  # Press 'q' to exit
+    while True:  # Press 'q' to exit
         # Initialization
         stdscr.clear()
         height, width = stdscr.getmaxyx()
@@ -240,15 +237,6 @@ def draw_menu(stdscr):
         else:
             phone_connected = False
             requests.post(url + "phoneDisconnected")
-        #if k == ord('p'):
-        #    phone_connected = not phone_connected
-        if k == ord('d'):
-            dispenser_connected = not dispenser_connected
-        elif ord('0') <= k <= ord('4'):
-            task_signal = k - ord('0')
-        elif k == ord('z'):
-            task = add_task(stdscr)
-            tasks.append(task)
 
         if event == 'task-complete':
             grove_servo.main()
@@ -280,40 +268,8 @@ def draw_menu(stdscr):
         # Refresh the screen
         stdscr.refresh()
 
-        # Wait for next input
-        k = stdscr.getch()
-
-        # Send pulse if 's' is pressed
-        if k == ord('s'):
-            perform_action(stdscr, height, width, phone_connected, dispenser_connected, task_signal)
-
 def main(): 
     curses.wrapper(draw_menu)
 
 if __name__ == "__main__":    
     main()
-
-
-
-
-''' keypress = stdscr.getch()
-if keypress == ord('q'):
-    # Signal all threads to stop
-    for event in stop_events:
-        event.set()
-    # Wait for all threads to finish
-    for thread in threads:
-        thread.join()
-    break
-elif keypress in (ord('1'), ord('2'), ord('3'), ord('4')):
-    # I would love to use "if chr(keypress) in messages" but that causes
-    # a stupid chr error. This is the best workaround, which sucks.
-
-    # threading
-    stop_event = threading.Event()
-    stop_events.append(stop_event)
-    # more threading
-    message_key = chr(keypress)
-    new_thread = threading.Thread(target=scroll_text_line, args=(stdscr, 2, 2, width-1, messages[message_key], 20, stop_event))
-    threads.append(new_thread)
-    new_thread.start()'''
