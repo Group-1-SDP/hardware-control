@@ -227,8 +227,8 @@ def draw_menu(stdscr):
             phone_connected = False
             requests.post(url + "phoneDisconnected")
 
-        #if event == 'task-complete':
-            #grove_servo.main()
+        if event == 'task-complete':
+            grove_servo.main()
 
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
