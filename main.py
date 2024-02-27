@@ -2,11 +2,9 @@ import curses
 import requests
 import time
 from nfc import NfcReader
-import threading # threading? really?
-# Yes. The timer needs to constantly run, but the text needs to scroll
-# independently of the timer. This allows two seperate time.sleep() calls
-# to update different aspects of the screen at different rates.
-# This will also be used to handle our concurrency for integrati
+import threading
+
+#we need threading to run the time and the display at the same time; otherwise there will be noticeable lag.
 
 time_in_secs = 0
 
@@ -162,7 +160,9 @@ def update_display(stdscr, stop_event):
         stdscr.addstr(8, 1,  time_line_array[5])
         stdscr.addstr(9, 1,  time_line_array[6])
         stdscr.addstr(10, 1, time_line_array[7])
-        stdscr.addstr(11, 1, '*****************************************************')
+        for i in range(11, 18):
+            stdscr.addstr(i, 1, '*                                                   *')
+        stdscr.addstr(19, 1, '*****************************************************')
 
         stdscr.refresh()
         time.sleep(1)
