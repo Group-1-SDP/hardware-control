@@ -113,7 +113,7 @@ colon = """
    ***
    ***
       
-    """
+"""
 
 def nums_side_by_side(*args):
     lines = [arg.split('\n') for arg in args]
@@ -231,23 +231,22 @@ def draw_menu(stdscr):
 
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
-        stdscr.addstr(2, 1, '*                                                *')
-        stdscr.addstr(3, 1, '*                                                *')
-        stdscr.addstr(4, 1, '*                                                *')
+        stdscr.addstr(2, 1, '*                   TickBox                      *')
+        stdscr.addstr(3, 1, '*             Please connect a phone             *')
+        stdscr.addstr(4, 1, '**************************************************')
         stdscr.addstr(5, 1, '*                                                *')
         stdscr.addstr(6, 1, '*                                                *')
-        stdscr.addstr(7, 1, '*                                                *')
-        stdscr.addstr(8, 1, '*                                                *')
-        stdscr.addstr(9, 1, '*                                                *')
-        stdscr.addstr(10, 1,'*                                                *')
-        stdscr.addstr(12, 1,'*                                                *')
-        stdscr.addstr(13, 1,'*                                                *')
-        stdscr.addstr(14, 1,'*                                                *')
-        stdscr.addstr(15, 1,'*                                                *')
-        stdscr.addstr(16, 1,'*                                                *')
-        stdscr.addstr(17, 1,'*                                                *')
-        #for i in range(12, 18): ignore for now.
-        #	stdscr.addstr(i, 1,'*                                                *')
+        stdscr.addstr(7, 1, '*                  $$$$$$$$$$$                   *')
+        stdscr.addstr(8, 1, '*                  $    %    $                   *')
+        stdscr.addstr(9, 1, '*                  $         $                   *')
+        stdscr.addstr(10, 1,'*   $$$$$$$$$      $         $                   *')
+        stdscr.addstr(11, 1,'*           $      $         $                   *')
+        stdscr.addstr(12, 1,'*           $      $         $                   *')
+        stdscr.addstr(13, 1,'*   $$$$$$$ $      $         $                   *')
+        stdscr.addstr(14, 1,'*         $ $      $         $                   *')
+        stdscr.addstr(15, 1,'*   $$$$  $ $      $$$$$$$$$$$                   *')
+        stdscr.addstr(16, 1,'*      $  $ $      $    %    $                   *')
+        stdscr.addstr(17, 1,'*   $  $  $ $      $$$$$$$$$$$                   *')
         stdscr.addstr(18, 1,'*                                                *')
         stdscr.addstr(19, 1,'**************************************************')
         # Refresh the screen
