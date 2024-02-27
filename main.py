@@ -189,6 +189,12 @@ def display_time(stdscr, phone_connected, nfcReader):
     time_thread.join()
     display_thread.join()
 
+sio = socketio.Client()
+sio.connect('https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev')
+@sio.on('task-complete')
+def on_task_complete():
+    grove_servo.main()
+
 def draw_menu(stdscr):
     phone_connected = False
     url="https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev/websocket/"
@@ -197,8 +203,8 @@ def draw_menu(stdscr):
 
     tasks = []
 
-    sio = socketio.Client()
-    sio.connect('https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev/websocket/')
+    #sio = socketio.Client()
+    #sio.connect('https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev/websocket/')
 
     # init nfc reader
 
@@ -214,9 +220,6 @@ def draw_menu(stdscr):
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        event = sio.receive()
-        print(event)
-
         # Handle input
 
         if nfcReader.get_reading():
@@ -226,9 +229,6 @@ def draw_menu(stdscr):
         else:
             phone_connected = False
             requests.post(url + "phoneDisconnected")
-
-        if event == 'task-complete':
-            grove_servo.main()
 
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
