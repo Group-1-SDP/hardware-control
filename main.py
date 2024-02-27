@@ -197,13 +197,8 @@ def draw_menu(stdscr):
 
     tasks = []
 
-<<<<<<< HEAD
     sio = socketio.Client()
     sio.connect('ws://localhost:5000')
-=======
-    #sio = socketio.Client()
-    #sio.connect('http://localhost:5000')
->>>>>>> 07e2393946fb21414ccbc21b523a43c674396fb5
 
     # init nfc reader
 
