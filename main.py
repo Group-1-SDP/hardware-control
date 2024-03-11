@@ -1,7 +1,7 @@
 import curses
 import requests
 import time
-from nfc import NfcReader
+from nfc_lib import NfcReader
 import threading
 import socketio
 import grove_servo
@@ -181,7 +181,7 @@ def display_time(stdscr, phone_connected, nfcReader):
     time_thread.start()
     display_thread.start()
 
-    while nfcReader.get_reading():
+    while nfcReader.get_uid() != '0':
         global time_in_secs
 
 
@@ -190,16 +190,46 @@ def display_time(stdscr, phone_connected, nfcReader):
     display_thread.join()
 
 sio = socketio.Client()
-sio.connect('https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev')
+sio.connect("https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev")
 @sio.on('task-complete')
 def on_task_complete():
+    #print("Task Complete Signal Recieved")
     grove_servo.main()
+
+def display_tick(stdscr):
+    curses.curs_set(0)
+    stdscr.nodelay(True)
+    while True:
+        stdscr.addstr(1, 1, '**************************************************')
+        stdscr.addstr(2, 1, '*                   TickBox                      *')
+        stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
+        stdscr.addstr(4, 1, '**************************************************')
+        stdscr.addstr(5, 1, '*                          ______________        *')
+        stdscr.addstr(6, 1, '*                         |              |       *')
+        stdscr.addstr(7, 1, '*               oooooo    | Keep it up!  |       *')
+        stdscr.addstr(8, 1, '*              oo    oo   |              |       *')
+        stdscr.addstr(9, 1, '*              o . .  o  /|______________|       *')
+        stdscr.addstr(10, 1,'*              o  |   o /                        *')
+        stdscr.addstr(11, 1,'*              o  v   o                          *')
+        stdscr.addstr(12, 1,'*              ooooooo                           *')
+        stdscr.addstr(13, 1,'*                 |                              *')
+        stdscr.addstr(14, 1,'*                 |_/                            *')
+        stdscr.addstr(15, 1,'*                /|                              *')
+        stdscr.addstr(16, 1,'*                 |                              *')
+        stdscr.addstr(17, 1,'*                / \                             *')
+        stdscr.addstr(18, 1,'*               /   \                            *')
+        stdscr.addstr(19, 1,'**************************************************')
+        # Refresh the screen
+        key = stdscr.getch()
+        if key == curses.KEY_UP:
+            break
+        stdscr.refresh()
 
 def draw_menu(stdscr):
     phone_connected = False
     url="https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev/websocket/"
 
-    stdscr.nodelay(1)
+    stdscr.nodelay(True)
 
     tasks = []
 
@@ -220,15 +250,27 @@ def draw_menu(stdscr):
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        # Handle input
+        #event = sio.receive()
+        #print(event)0
 
-        if nfcReader.get_reading():
+        # Handle input
+        
+        #key = stdscr.getch()
+
+        #if key == 't' and nfcReader.get_uid() == 0:
+        #    display_tick(stdscr)
+
+
+        if nfcReader.get_uid() != '0':
             phone_connected = True
             requests.post(url + "phoneConnected")
             display_time(stdscr, phone_connected, nfcReader)
         else:
             phone_connected = False
             requests.post(url + "phoneDisconnected")
+
+        #if event == 'task-complete':
+        #    grove_servo.main()
 
         # Render the UI
         stdscr.addstr(1, 1, '**************************************************')
@@ -250,7 +292,12 @@ def draw_menu(stdscr):
         stdscr.addstr(17, 1,'*   $  $  $ $      $$$$$$$$$$$                   *')
         stdscr.addstr(18, 1,'*                                                *')
         stdscr.addstr(19, 1,'**************************************************')
-        # Refresh the screen
+        #Debug. Tickagotchi implementation currently accessed by up key for debug. In future, access via web pulse or on box button.
+        key = stdscr.getch()
+        if key == curses.KEY_UP:
+            display_tick(stdscr)
+        
+        #Refresh the screen
         stdscr.refresh()
 
 def main(): 
