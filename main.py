@@ -193,7 +193,6 @@ sio = socketio.Client()
 sio.connect("https://studious-lamp-p45x777q9rp27gx5-5000.app.github.dev")
 @sio.on('task-complete')
 def on_task_complete():
-    #print("Task Complete Signal Recieved")
     grove_servo.main()
 
 def display_tick(stdscr):
