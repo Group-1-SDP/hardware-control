@@ -1,8 +1,10 @@
-import socketio
+from flask import Flask, request, jsonify
+from flask_socketio import SocketIO
 import curses
 
 def client(stdscr):
-    sio = socketio.Client()
+    app = Flask(__name__)
+    sio = SocketIO(app, cors_allowed_origins="*")
     curses.noecho()
 
     while True:
@@ -10,7 +12,7 @@ def client(stdscr):
 
         stdscr.addstr(1, 1, '**************************************************')
         stdscr.addstr(2, 1, '*                   TickBox                      *')
-        stdscr.addstr(3, 1, '*             Please connect a phone             *')
+        stdscr.addstr(3, 1, '*                Fake web client                 *')
         stdscr.addstr(4, 1, '**************************************************')
         stdscr.addstr(5, 1, '*                                                *')
         stdscr.addstr(6, 1, '*                                                *')
