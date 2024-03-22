@@ -7,14 +7,52 @@ import socketio
 import grove_servo
 import notification_detection.ocr_pi 
 from notification_detection.text_filter import TextFilter
+from notification_detection.ocr_pi import OCR
 
 #we need threading to run the time and the display at the same time; otherwise there will be noticeable lag.
 
 time_in_secs = 0
 text_filter = TextFilter()
+ocr = OCR()
+
+tick_current = 4 
+start_tick = time.time()
+tick_timer = start_tick
+display_tickagotchi = False
+
 url="https://congenial-robot-v9jxppp7w4x2xqvj-5000.app.github.dev/websocket/"
 
-def sevenSegmentASCII(num):
+sio = socketio.Client()
+sio.connect(url)
+@sio.on('task-complete')
+def on_task_complete():
+    grove_servo.main()
+    if tick_current.value < 4:
+        tick_current += 1
+    global tick_timer
+    start_tick = time.time()
+    tick_timer = start_tick
+
+@sio.on('detect-notifications')
+def detect_notifications():
+    thread = threading.Thread(target=ocr.run, args=(text_filter))
+    thread.start()
+
+@sio.on('stop-detecting')
+def stop_detecting():
+    ocr.terminate()
+
+@sio.on('tickagotchi-on')
+def tickagotchi_on():
+    global display_tickagotchi
+    display_tickagotchi = True
+
+@sio.on('tickagotchi-off')
+def tickagotchi_on():
+    global display_tickagotchi
+    display_tickagotchi = False
+
+def seven_segment(num):
     """Function that returns an ASCII representation of the time in seven segment display style"""
     zero = """
    $$$$$$ 
@@ -150,7 +188,7 @@ def update_display(stdscr, stop_event):
         digit2 = int(timer[1])
         digit3 = int(timer[3])
         digit4 = int(timer[4])
-        time_line_array = nums_side_by_side(sevenSegmentASCII(digit1), sevenSegmentASCII(digit2), colon, sevenSegmentASCII(digit3), sevenSegmentASCII(digit4))
+        time_line_array = nums_side_by_side(seven_segment(digit1), seven_segment(digit2), colon, seven_segment(digit3), seven_segment(digit4))
 
         # Start of screen stuff
         stdscr.clear()
@@ -192,42 +230,9 @@ def display_time(stdscr, phone_connected, nfcReader):
     while nfcReader.get_uid() != '0':
         pass
 
-
     stop_event.set()
     time_thread.join()
     display_thread.join()
-
-tick_current = 4 
-start_tick = time.time()
-tick_timer = start_tick
-
-sio = socketio.Client()
-sio.connect(url)
-@sio.on('task-complete')
-def on_task_complete():
-    #print("Task Complete Signal Recieved")
-    grove_servo.main()
-    if tick_current.value < 4:
-        tick_current += 1
-    global tick_timer
-    start_tick = time.time()
-    tick_timer = start_tick
-
-@sio.on('detect-notifications')
-def detect_notifications():
-    notification_detection.ocr_pi.detect(text_filter)
-    #run func
-
-@sio.on('stop-detecting')
-def stop_detecting():
-    pass
-    #stop func
-
-# def display_notif(notif):
-#     global notification
-#     notification = notif
-#     time.sleep(5)
-#     notification = ""
 
 def update_tick_time(stop_event): #crude implementation. in future make a generalised timekeeping func
     global tick_timer
@@ -241,123 +246,15 @@ def update_tick_time(stop_event): #crude implementation. in future make a genera
             tick_timer = start_tick
         time.sleep(1)
 
-
-def refresh_tick(stdscr, stop_event):
-    curses.curs_set(0)
-    stdscr.nodelay(True)
-    global tick_current
-    while not stop_event.is_set():
-        if tick_current == 4:
-            stdscr.addstr(1, 1, '**************************************************')
-            stdscr.addstr(2, 1, '*                   TickBox                      *')
-            stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
-            stdscr.addstr(4, 1, '**************************************************')
-            stdscr.addstr(5, 1, '*    $$$$$$$  $$$$$$$$$$$$$$$  $$$$$$$           *')
-            stdscr.addstr(6, 1, '*  $$       $$               $$       $$         *')
-            stdscr.addstr(7, 1, '* $          /---         ---\          $        *')
-            stdscr.addstr(8, 1, '*$          $ $$           $$ $          $       *')
-            stdscr.addstr(9, 1, '* $   $$    $$  $         $  $$    $$   $        *')
-            stdscr.addstr(10, 1,'*  $ $  $   $ $$           $$ $   $  $ $         *')
-            stdscr.addstr(11, 1,'*   $    $  $                 $  $    $          *')
-            stdscr.addstr(12, 1,'*         $ $      $$$$$      $ $                *')
-            stdscr.addstr(13, 1,'*           $       $$$       $                  *')
-            stdscr.addstr(14, 1,'*           $        $        $                  *')
-            stdscr.addstr(15, 1,'*            $    $$$$$$$    $                   *')
-            stdscr.addstr(16, 1,'*             $    $___$    $                    *')
-            stdscr.addstr(17, 1,'*              $$         $$                     *')
-            stdscr.addstr(18, 1,'*                $$$$$$$$$                       *')
-            stdscr.addstr(19, 1,'**************************************************')
-        if tick_current == 3:
-            stdscr.addstr(1, 1, '**************************************************')
-            stdscr.addstr(2, 1, '*                   TickBox                      *')
-            stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
-            stdscr.addstr(4, 1, '**************************************************')
-            stdscr.addstr(5, 1, '*          $$$$$$$$$$$$$$$                       *')
-            stdscr.addstr(6, 1, '*        $$               $$                     *')
-            stdscr.addstr(7, 1, '*       $ /---         ---\ $                    *')
-            stdscr.addstr(8, 1, '*      $ $ $$           $$ $ $                   *')
-            stdscr.addstr(9, 1, '*      $ $$  $         $  $$  $                  *')
-            stdscr.addstr(10, 1,'*     $  $ $$           $$ $  $                  *')
-            stdscr.addstr(11, 1,'*     $  $                 $  $                  *')
-            stdscr.addstr(12, 1,'*    $   $      $$$$$      $   $                 *')
-            stdscr.addstr(13, 1,'*    $   $       $$$       $   $                 *')
-            stdscr.addstr(14, 1,'*     $  $        $        $  $                  *')
-            stdscr.addstr(15, 1,'*      $  $    $  $  $    $  $                   *')
-            stdscr.addstr(16, 1,'*       $$ $    $$ $$    $ $$                    *')
-            stdscr.addstr(17, 1,'*           $$         $$                        *')
-            stdscr.addstr(18, 1,'*             $$$$$$$$$                          *')
-            stdscr.addstr(19, 1,'**************************************************')
-        if tick_current == 2:
-            stdscr.addstr(1, 1, '**************************************************')
-            stdscr.addstr(2, 1, '*                   TickBox                      *')
-            stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
-            stdscr.addstr(4, 1, '**************************************************')
-            stdscr.addstr(5, 1, '*          $$$$$$$$$$$$$$$                       *')
-            stdscr.addstr(6, 1, '*        $$               $$                     *')
-            stdscr.addstr(7, 1, '*       $ ----         ---- $                    *')
-            stdscr.addstr(8, 1, '*      $ $ $$           $$ $ $                   *')
-            stdscr.addstr(9, 1, '*      $ $$  $         $  $$  $                  *')
-            stdscr.addstr(10, 1,'*     $  $ $$           $$ $  $                  *')
-            stdscr.addstr(11, 1,'*     $  $                 $  $                  *')
-            stdscr.addstr(12, 1,'*    $   $      $$$$$      $   $                 *')
-            stdscr.addstr(13, 1,'*    $   $       $$$       $   $                 *')
-            stdscr.addstr(14, 1,'*     $  $        $        $  $                  *')
-            stdscr.addstr(15, 1,'*      $  $       $       $  $                   *')
-            stdscr.addstr(16, 1,'*       $$ $   $$$ $$$   $ $$                    *')
-            stdscr.addstr(17, 1,'*           $$         $$                        *')
-            stdscr.addstr(18, 1,'*             $$$$$$$$$                          *')
-            stdscr.addstr(19, 1,'**************************************************')
-        if tick_current == 1:
-            stdscr.addstr(1, 1, '**************************************************')
-            stdscr.addstr(2, 1, '*                   TickBox                      *')
-            stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
-            stdscr.addstr(4, 1, '**************************************************')
-            stdscr.addstr(5, 1, '*          $$$$$$$$$$$$$$$                       *')
-            stdscr.addstr(6, 1, '*        $$               $$                     *')
-            stdscr.addstr(7, 1, '*       $ ---\         /--- $                    *')
-            stdscr.addstr(8, 1, '*      $ $ $$ \       / $$ $ $                   *')
-            stdscr.addstr(9, 1, '*      $ $$  $         $  $$  $                  *')
-            stdscr.addstr(10, 1,'*     $  $ $$           $$ $  $                  *')
-            stdscr.addstr(11, 1,'*     $  $                 $  $                  *')
-            stdscr.addstr(12, 1,'*    $   $      $$$$$      $   $                 *')
-            stdscr.addstr(13, 1,'*    $   $       $$$       $   $                 *')
-            stdscr.addstr(14, 1,'*     $  $        $        $  $                  *')
-            stdscr.addstr(15, 1,'*      $  $     $$$$$     $  $                   *')
-            stdscr.addstr(16, 1,'*       $$ $   $     $   $ $$                    *')
-            stdscr.addstr(17, 1,'*           $$         $$                        *')
-            stdscr.addstr(18, 1,'*             $$$$$$$$$                          *')
-            stdscr.addstr(19, 1,'**************************************************')
-        if tick_current == 0:
-            stdscr.addstr(1, 1, '**************************************************')
-            stdscr.addstr(2, 1, '*                   TickBox                      *')
-            stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
-            stdscr.addstr(4, 1, '**************************************************')
-            stdscr.addstr(5, 1, '*          $$$$$$$$$$$$$$$                       *')
-            stdscr.addstr(6, 1, '*        $$               $$                     *')
-            stdscr.addstr(7, 1, '*       $ ---\         /--- $                    *')
-            stdscr.addstr(8, 1, '*      $ $ $$ \       / $$ $ $                   *')
-            stdscr.addstr(9, 1, '*      $ $$__$         $__$$  $                  *')
-            stdscr.addstr(10, 1,'*     $  $ |            |  $  $                  *')
-            stdscr.addstr(11, 1,'*     $  $ |            ^  $  $                  *')
-            stdscr.addstr(12, 1,'*    $   $ ^    $$$$$   0  $   $                 *')
-            stdscr.addstr(13, 1,'*    $   $ 0     $$$       $   $                 *')
-            stdscr.addstr(14, 1,'*     $  $        $        $  $                  *')
-            stdscr.addstr(15, 1,'*      $  $     $$$$$     $  $                   *')
-            stdscr.addstr(16, 1,'*       $$ $   $_____$   $ $$                    *')
-            stdscr.addstr(17, 1,'*           $$         $$                        *')
-            stdscr.addstr(18, 1,'*             $$$$$$$$$                          *')
-            stdscr.addstr(19, 1,'**************************************************')
-        # Refresh the screen
-        stdscr.refresh()
-    #stop_event.set()
-    #GETTING OFF OF THIS SCREEN DOES NOT WORK!!!!!!!!!!!
-    tick_display_thread.join()
-
 def draw_menu(stdscr):
+
+    global tick_current
+    global display_tickagotchi 
     phone_connected = False
+
     stdscr.nodelay(True)
     tasks = []
-
+    
     # init nfc reader
 
     nfcReader = NfcReader()
@@ -369,7 +266,7 @@ def draw_menu(stdscr):
     #start tickagotchi background timekeeping
     stop_event = threading.Event()
 
-    tick_display_thread = threading.Thread(target=refresh_tick, args=(stdscr, stop_event))
+    #tick_display_thread = threading.Thread(target=refresh_tick, args=(stdscr, stop_event))
 
     tick_time_thread = threading.Thread(target=update_tick_time, args=(stop_event, ))
     tick_time_thread.start()
@@ -388,36 +285,140 @@ def draw_menu(stdscr):
             requests.post(url + "phoneDisconnected")
 
         # Render the UI
-        stdscr.addstr(1, 1, '**************************************************')
-        stdscr.addstr(2, 1, '*                   TickBox                      *')
-        stdscr.addstr(3, 1, '*             Please connect a phone             *')
-        stdscr.addstr(4, 1, '**************************************************')
-        stdscr.addstr(5, 1, '*                                                *')
-        stdscr.addstr(6, 1, '*                                                *')
-        stdscr.addstr(7, 1, '*                  $$$$$$$$$$$                   *')
-        stdscr.addstr(8, 1, '*                  $    %    $                   *')
-        stdscr.addstr(9, 1, '*                  $         $                   *')
-        stdscr.addstr(10, 1,'*   $$$$$$$$$      $         $                   *')
-        stdscr.addstr(11, 1,'*           $      $         $                   *')
-        stdscr.addstr(12, 1,'*           $      $         $                   *')
-        stdscr.addstr(13, 1,'*   $$$$$$$ $      $         $                   *')
-        stdscr.addstr(14, 1,'*         $ $      $         $                   *')
-        stdscr.addstr(15, 1,'*   $$$$  $ $      $$$$$$$$$$$                   *')
-        stdscr.addstr(16, 1,'*      $  $ $      $    %    $                   *')
-        stdscr.addstr(17, 1,'*   $  $  $ $      $$$$$$$$$$$                   *')
-        stdscr.addstr(18, 1,'*                                                *')
-        stdscr.addstr(19, 1,'**************************************************')
-
+        if display_tickagotchi == False:
+            stdscr.addstr(1, 1, '**************************************************')
+            stdscr.addstr(2, 1, '*                   TickBox                      *')
+            stdscr.addstr(3, 1, '*             Please connect a phone             *')
+            stdscr.addstr(4, 1, '**************************************************')
+            stdscr.addstr(5, 1, '*                                                *')
+            stdscr.addstr(6, 1, '*                                                *')
+            stdscr.addstr(7, 1, '*                  $$$$$$$$$$$                   *')
+            stdscr.addstr(8, 1, '*                  $    %    $                   *')
+            stdscr.addstr(9, 1, '*                  $         $                   *')
+            stdscr.addstr(10, 1,'*   $$$$$$$$$      $         $                   *')
+            stdscr.addstr(11, 1,'*           $      $         $                   *')
+            stdscr.addstr(12, 1,'*           $      $         $                   *')
+            stdscr.addstr(13, 1,'*   $$$$$$$ $      $         $                   *')
+            stdscr.addstr(14, 1,'*         $ $      $         $                   *')
+            stdscr.addstr(15, 1,'*   $$$$  $ $      $$$$$$$$$$$                   *')
+            stdscr.addstr(16, 1,'*      $  $ $      $    %    $                   *')
+            stdscr.addstr(17, 1,'*   $  $  $ $      $$$$$$$$$$$                   *')
+            stdscr.addstr(18, 1,'*                                                *')
+            stdscr.addstr(19, 1,'**************************************************')
+        elif display_tickagotchi == True:
+            if tick_current == 4:
+                stdscr.addstr(1, 1, '**************************************************')
+                stdscr.addstr(2, 1, '*                   TickBox                      *')
+                stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
+                stdscr.addstr(4, 1, '**************************************************')
+                stdscr.addstr(5, 1, '*    $$$$$$$  $$$$$$$$$$$$$$$  $$$$$$$           *')
+                stdscr.addstr(6, 1, '*  $$       $$               $$       $$         *')
+                stdscr.addstr(7, 1, '* $          /---         ---\          $        *')
+                stdscr.addstr(8, 1, '*$          $ $$           $$ $          $       *')
+                stdscr.addstr(9, 1, '* $   $$    $$  $         $  $$    $$   $        *')
+                stdscr.addstr(10, 1,'*  $ $  $   $ $$           $$ $   $  $ $         *')
+                stdscr.addstr(11, 1,'*   $    $  $                 $  $    $          *')
+                stdscr.addstr(12, 1,'*         $ $      $$$$$      $ $                *')
+                stdscr.addstr(13, 1,'*           $       $$$       $                  *')
+                stdscr.addstr(14, 1,'*           $        $        $                  *')
+                stdscr.addstr(15, 1,'*            $    $$$$$$$    $                   *')
+                stdscr.addstr(16, 1,'*             $    $___$    $                    *')
+                stdscr.addstr(17, 1,'*              $$         $$                     *')
+                stdscr.addstr(18, 1,'*                $$$$$$$$$                       *')
+                stdscr.addstr(19, 1,'**************************************************')
+            if tick_current == 3:
+                stdscr.addstr(1, 1, '**************************************************')
+                stdscr.addstr(2, 1, '*                   TickBox                      *')
+                stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
+                stdscr.addstr(4, 1, '**************************************************')
+                stdscr.addstr(5, 1, '*          $$$$$$$$$$$$$$$                       *')
+                stdscr.addstr(6, 1, '*        $$               $$                     *')
+                stdscr.addstr(7, 1, '*       $ /---         ---\ $                    *')
+                stdscr.addstr(8, 1, '*      $ $ $$           $$ $ $                   *')
+                stdscr.addstr(9, 1, '*      $ $$  $         $  $$  $                  *')
+                stdscr.addstr(10, 1,'*     $  $ $$           $$ $  $                  *')
+                stdscr.addstr(11, 1,'*     $  $                 $  $                  *')
+                stdscr.addstr(12, 1,'*    $   $      $$$$$      $   $                 *')
+                stdscr.addstr(13, 1,'*    $   $       $$$       $   $                 *')
+                stdscr.addstr(14, 1,'*     $  $        $        $  $                  *')
+                stdscr.addstr(15, 1,'*      $  $    $  $  $    $  $                   *')
+                stdscr.addstr(16, 1,'*       $$ $    $$ $$    $ $$                    *')
+                stdscr.addstr(17, 1,'*           $$         $$                        *')
+                stdscr.addstr(18, 1,'*             $$$$$$$$$                          *')
+                stdscr.addstr(19, 1,'**************************************************')
+            if tick_current == 2:
+                stdscr.addstr(1, 1, '**************************************************')
+                stdscr.addstr(2, 1, '*                   TickBox                      *')
+                stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
+                stdscr.addstr(4, 1, '**************************************************')
+                stdscr.addstr(5, 1, '*          $$$$$$$$$$$$$$$                       *')
+                stdscr.addstr(6, 1, '*        $$               $$                     *')
+                stdscr.addstr(7, 1, '*       $ ----         ---- $                    *')
+                stdscr.addstr(8, 1, '*      $ $ $$           $$ $ $                   *')
+                stdscr.addstr(9, 1, '*      $ $$  $         $  $$  $                  *')
+                stdscr.addstr(10, 1,'*     $  $ $$           $$ $  $                  *')
+                stdscr.addstr(11, 1,'*     $  $                 $  $                  *')
+                stdscr.addstr(12, 1,'*    $   $      $$$$$      $   $                 *')
+                stdscr.addstr(13, 1,'*    $   $       $$$       $   $                 *')
+                stdscr.addstr(14, 1,'*     $  $        $        $  $                  *')
+                stdscr.addstr(15, 1,'*      $  $       $       $  $                   *')
+                stdscr.addstr(16, 1,'*       $$ $   $$$ $$$   $ $$                    *')
+                stdscr.addstr(17, 1,'*           $$         $$                        *')
+                stdscr.addstr(18, 1,'*             $$$$$$$$$                          *')
+                stdscr.addstr(19, 1,'**************************************************')
+            if tick_current == 1:
+                stdscr.addstr(1, 1, '**************************************************')
+                stdscr.addstr(2, 1, '*                   TickBox                      *')
+                stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
+                stdscr.addstr(4, 1, '**************************************************')
+                stdscr.addstr(5, 1, '*          $$$$$$$$$$$$$$$                       *')
+                stdscr.addstr(6, 1, '*        $$               $$                     *')
+                stdscr.addstr(7, 1, '*       $ ---\         /--- $                    *')
+                stdscr.addstr(8, 1, '*      $ $ $$ \       / $$ $ $                   *')
+                stdscr.addstr(9, 1, '*      $ $$  $         $  $$  $                  *')
+                stdscr.addstr(10, 1,'*     $  $ $$           $$ $  $                  *')
+                stdscr.addstr(11, 1,'*     $  $                 $  $                  *')
+                stdscr.addstr(12, 1,'*    $   $      $$$$$      $   $                 *')
+                stdscr.addstr(13, 1,'*    $   $       $$$       $   $                 *')
+                stdscr.addstr(14, 1,'*     $  $        $        $  $                  *')
+                stdscr.addstr(15, 1,'*      $  $     $$$$$     $  $                   *')
+                stdscr.addstr(16, 1,'*       $$ $   $     $   $ $$                    *')
+                stdscr.addstr(17, 1,'*           $$         $$                        *')
+                stdscr.addstr(18, 1,'*             $$$$$$$$$                          *')
+                stdscr.addstr(19, 1,'**************************************************')
+            if tick_current == 0:
+                stdscr.addstr(1, 1, '**************************************************')
+                stdscr.addstr(2, 1, '*                   TickBox                      *')
+                stdscr.addstr(3, 1, '*                 Tickagotchi                    *')
+                stdscr.addstr(4, 1, '**************************************************')
+                stdscr.addstr(5, 1, '*          $$$$$$$$$$$$$$$                       *')
+                stdscr.addstr(6, 1, '*        $$               $$                     *')
+                stdscr.addstr(7, 1, '*       $ ---\         /--- $                    *')
+                stdscr.addstr(8, 1, '*      $ $ $$ \       / $$ $ $                   *')
+                stdscr.addstr(9, 1, '*      $ $$__$         $__$$  $                  *')
+                stdscr.addstr(10, 1,'*     $  $ |            |  $  $                  *')
+                stdscr.addstr(11, 1,'*     $  $ |            ^  $  $                  *')
+                stdscr.addstr(12, 1,'*    $   $ ^    $$$$$   0  $   $                 *')
+                stdscr.addstr(13, 1,'*    $   $ 0     $$$       $   $                 *')
+                stdscr.addstr(14, 1,'*     $  $        $        $  $                  *')
+                stdscr.addstr(15, 1,'*      $  $     $$$$$     $  $                   *')
+                stdscr.addstr(16, 1,'*       $$ $   $_____$   $ $$                    *')
+                stdscr.addstr(17, 1,'*           $$         $$                        *')
+                stdscr.addstr(18, 1,'*             $$$$$$$$$                          *')
+                stdscr.addstr(19, 1,'**************************************************')
+        
         #Debug. Tickagotchi implementation currently accessed by up key for debug. In future, access via web pulse or on box button.
         key = stdscr.getch()
         if key == curses.KEY_UP:
-            tick_display_thread.start()
-        #COMMENTED OUT BECAUSE JUST REPEATING DEMO 2!!!!!
-        #Refresh the screen
+            display_tickagotchi = not display_tickagotchi
+            #tick_display_thread.start()
+
+        # Refresh the screen
         stdscr.refresh()
 
 def main():
     curses.wrapper(draw_menu)
+    detect_notifications()
 
 if __name__ == "__main__":    
     main()  
