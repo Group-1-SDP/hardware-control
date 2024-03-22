@@ -2,11 +2,9 @@ import curses
 import requests
 import time
 from nfc_lib import NfcReader
-from enum import Enum
 import threading
 import socketio
 import grove_servo
-#from notification_detection.ocr_pi import detect
 import notification_detection.ocr_pi 
 from notification_detection.text_filter import TextFilter
 
@@ -19,94 +17,94 @@ url="https://congenial-robot-v9jxppp7w4x2xqvj-5000.app.github.dev/websocket/"
 def sevenSegmentASCII(num):
     """Function that returns an ASCII representation of the time in seven segment display style"""
     zero = """
-    $$$$$$ 
-   $$$   $$
-   $$$$  $$
-   $$ $$ $$
-   $$  $$$$
-   $$   $$$
-    $$$$$$ 
+   $$$$$$ 
+  $$$   $$
+  $$$$  $$
+  $$ $$ $$
+  $$  $$$$
+  $$   $$$
+   $$$$$$ 
     """
     one = """
-     $$  
-   $$$$  
-     $$  
-     $$  
-     $$  
-     $$  
-   $$$$$$
+    $$$$  
+  $$$$$$  
+     $$$  
+     $$$  
+     $$$  
+     $$$  
+  $$$$$$$$
     """
     two = """
-    $$$$$$ 
-   $$    $$
-         $$
-    $$$$$$ 
-   $$      
-   $$      
-   $$$$$$$$
+   $$$$$$ 
+  $$    $$
+        $$
+   $$$$$$ 
+  $$      
+  $$      
+  $$$$$$$$
     """
     three = """
-    $$$$$$ 
-   $$    $$
-         $$
-     $$$$$ 
-         $$
-   $$    $$
-    $$$$$$ 
+   $$$$$$ 
+  $$    $$
+        $$
+    $$$$$ 
+        $$
+  $$    $$
+   $$$$$$ 
     """
     four = """
-   $$    $$
-   $$    $$
-   $$    $$
-   $$$$$$$$
-         $$
-         $$
-         $$
+  $$    $$
+  $$    $$
+  $$    $$
+  $$$$$$$$
+        $$
+        $$
+        $$
     """
     five = """
-   $$$$$$$ 
-   $$      
-   $$      
-   $$$$$$$ 
-         $$
-   $$    $$
-    $$$$$$ 
+  $$$$$$$ 
+  $$      
+  $$      
+  $$$$$$$ 
+        $$
+  $$    $$
+   $$$$$$ 
     """
     six = """
-    $$$$$$ 
-   $$    $$
-   $$      
-   $$$$$$$ 
-   $$    $$
-   $$    $$
-    $$$$$$ 
+   $$$$$$ 
+  $$    $$
+  $$      
+  $$$$$$$ 
+  $$    $$
+  $$    $$
+   $$$$$$ 
     """
     seven = """
-   $$$$$$$$
-        $$ 
-       $$  
-      $$   
-     $$    
-    $$     
-   $$      
+  $$$$$$$$
+       $$ 
+      $$  
+     $$   
+    $$    
+   $$     
+  $$      
     """
     eight = """
-    $$$$$$ 
-   $$    $$
-   $$    $$
-    $$$$$$ 
-   $$    $$
-   $$    $$
-    $$$$$$ 
+   $$$$$$ 
+  $$    $$
+  $$    $$
+   $$$$$$ 
+  $$    $$
+  $$    $$
+   $$$$$$ 
     """
     nine = """
-    $$$$$$ 
-   $$    $$
-   $$    $$
-    $$$$$$$
-         $$
-   $$    $$
-    $$$$$$ 
+   $$$$$$ 
+  $$    $$
+  $$    $$
+   $$$$$$$
+        $$
+  $$    $$
+   $$$$$$ 
     """
     digits = [zero, one, two, three, four, five, six, seven, eight, nine]
     return digits[num]
@@ -161,13 +159,13 @@ def update_display(stdscr, stop_event):
         stdscr.addstr(1, 1,  '**************************************************')
         stdscr.addstr(2, 1,  '*                     Time on task               *')
         stdscr.addstr(3, 1,  '**************************************************')
-        stdscr.addstr(4, 1,  '*' + time_line_array[1])
-        stdscr.addstr(5, 1,  '*' + time_line_array[2])
-        stdscr.addstr(6, 1,  '*' + time_line_array[3])
-        stdscr.addstr(7, 1,  '*' + time_line_array[4])
-        stdscr.addstr(8, 1,  '*' + time_line_array[5])
-        stdscr.addstr(9, 1,  '*' + time_line_array[6])
-        stdscr.addstr(10, 1, '*' + time_line_array[7])
+        stdscr.addstr(4, 1,  '*' + time_line_array[1] + '   *')
+        stdscr.addstr(5, 1,  '*' + time_line_array[2] + '   *') 
+        stdscr.addstr(6, 1,  '*' + time_line_array[3] + '   *')
+        stdscr.addstr(7, 1,  '*' + time_line_array[4] + '   *')
+        stdscr.addstr(8, 1,  '*' + time_line_array[5] + '   *')
+        stdscr.addstr(9, 1,  '*' + time_line_array[6] + '   *')
+        stdscr.addstr(10, 1, '*' + time_line_array[7] + '   *')
         stdscr.addstr(11, 1, '*                                                *')
         spaces_notif = ' ' * ((48-len(text_filter.text_to_display))//2)
         odd_case = (' ' if (48-len(text_filter.text_to_display)) % 2 != 0 else '')
