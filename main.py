@@ -50,15 +50,10 @@ def detect_notifications():
 def stop_detecting():
     ocr.terminate()
 
-@sio.on('tickagotchi-on')
-def tickagotchi_on():
+@sio.on('tickagotchi')
+def tickagotchi():
     global display_tickagotchi
-    display_tickagotchi = True
-
-@sio.on('tickagotchi-off')
-def tickagotchi_on():
-    global display_tickagotchi
-    display_tickagotchi = False
+    display_tickagotchi = not display_tickagotchi
 
 def seven_segment(num):
     """Function that returns an ASCII representation of the time in seven segment display style"""
@@ -272,7 +267,6 @@ def draw_menu(stdscr):
                     stop_event.set()
                     time_thread.join()
 
-                #global time_in_secs
                 timer = time.strftime("%M:%S", time.gmtime(time_in_secs))
                 digit1 = int(timer[0])
                 digit2 = int(timer[1])
