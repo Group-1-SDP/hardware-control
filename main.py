@@ -20,7 +20,8 @@ start_tick = time.time()
 tick_timer = start_tick
 display_tickagotchi = False
 
-url="https://congenial-robot-v9jxppp7w4x2xqvj-5000.app.github.dev/websocket/"
+# url="https://congenial-robot-v9jxppp7w4x2xqvj-5000.app.github.dev/websocket/"
+url="https://musical-winner-pqvwr795vj6345r-5000.app.github.dev/websocket/"
 
 sio = socketio.Client()
 conn = False
@@ -43,7 +44,7 @@ def on_task_complete():
 
 @sio.on('detect-notifications')
 def detect_notifications():
-    thread = threading.Thread(target=ocr.run, args=(text_filter))
+    thread = threading.Thread(target=ocr.run, args=(text_filter,))
     thread.start()
 
 @sio.on('stop-detecting')
@@ -195,6 +196,60 @@ def update_tick_time(stop_event):
             tick_timer = start_tick
         time.sleep(1)
 
+def update_display(stdscr, stop_event):
+    global time_in_secs
+    while not stop_event.is_set():
+        timer = time.strftime("%M:%S", time.gmtime(time_in_secs))
+        digit1 = int(timer[0])
+        digit2 = int(timer[1])
+        digit3 = int(timer[3])
+        digit4 = int(timer[4])
+        time_line_array = nums_side_by_side(seven_segment(digit1), seven_segment(digit2), colon, seven_segment(digit3), seven_segment(digit4))
+
+        # Start of screen stuff
+        stdscr.clear()
+        height, width = stdscr.getmaxyx()
+
+        stdscr.addstr(1, 1,  '**************************************************')
+        stdscr.addstr(2, 1,  '*                     Time on task               *')
+        stdscr.addstr(3, 1,  '**************************************************')
+        stdscr.addstr(4, 1,  '*' + time_line_array[1] + '   *')
+        stdscr.addstr(5, 1,  '*' + time_line_array[2] + '   *') 
+        stdscr.addstr(6, 1,  '*' + time_line_array[3] + '   *')
+        stdscr.addstr(7, 1,  '*' + time_line_array[4] + '   *')
+        stdscr.addstr(8, 1,  '*' + time_line_array[5] + '   *')
+        stdscr.addstr(9, 1,  '*' + time_line_array[6] + '   *')
+        stdscr.addstr(10, 1, '*' + time_line_array[7] + '   *')
+        stdscr.addstr(11, 1, '*                                                *')
+        spaces_notif = ' ' * ((48-len(text_filter.text_to_display))//2)
+        odd_case = (' ' if (48-len(text_filter.text_to_display)) % 2 != 0 else '')
+        stdscr.addstr(12, 1, "*" + spaces_notif + f'{text_filter.text_to_display}' +  spaces_notif + odd_case + "*")
+        for i in range(13, 19):
+            stdscr.addstr(i, 1, '*                                                *')
+        stdscr.addstr(19, 1, '**************************************************')
+
+        stdscr.refresh()
+        time.sleep(1)
+
+def display_time(stdscr, phone_connected, nfcReader):
+    curses.curs_set(0)
+    stdscr.nodelay(True)
+
+    start_time = time.time()
+    stop_event = threading.Event()
+
+    time_thread = threading.Thread(target=update_time, args=(stop_event, start_time))
+    display_thread = threading.Thread(target=update_display, args=(stdscr, stop_event))
+    time_thread.start()
+    display_thread.start()
+
+    while nfcReader.get_uid() != '0':
+        pass
+
+    stop_event.set()
+    time_thread.join()
+    display_thread.join()
+
 def draw_menu(stdscr):
 
     global tick_current
@@ -226,7 +281,7 @@ def draw_menu(stdscr):
         if nfcReader.get_uid() == '1' and phone_connected == False :
             phone_connected = True
             requests.post(url + "phoneConnected")
-            #display_time(stdscr, phone_connected, nfcReader)
+            display_time(stdscr, phone_connected, nfcReader)
         elif nfcReader.get_uid() != '1' and phone_connected == True:
             phone_connected = False
             requests.post(url + "phoneDisconnected")
@@ -252,52 +307,6 @@ def draw_menu(stdscr):
             stdscr.addstr(17, 1,'*   $  $  $ $      $$$$$$$$$$$                   *')
             stdscr.addstr(18, 1,'*                                                *')
             stdscr.addstr(19, 1,'**************************************************')
-
-        elif phone_connected == True and display_tickagotchi == False: 
-            global time_in_secs
-            
-            start_time = time.time()
-            stop_event = threading.Event()
-
-            time_thread = threading.Thread(target=update_time, args=(stop_event, start_time))
-            time_thread.start()
-
-            while not stop_event.is_set():
-                if nfcReader.get_uid() == '0':
-                    stop_event.set()
-                    time_thread.join()
-
-                timer = time.strftime("%M:%S", time.gmtime(time_in_secs))
-                digit1 = int(timer[0])
-                digit2 = int(timer[1])
-                digit3 = int(timer[3])
-                digit4 = int(timer[4])
-                time_line_array = nums_side_by_side(seven_segment(digit1), seven_segment(digit2), colon, seven_segment(digit3), seven_segment(digit4))
-
-                # Start of screen stuff
-                stdscr.clear()
-
-                stdscr.addstr(1, 1,  '**************************************************')
-                stdscr.addstr(2, 1,  '*                  Time on task                  *')
-                stdscr.addstr(3, 1,  '**************************************************')
-                stdscr.addstr(4, 1,  '*' + time_line_array[1] + '   *')
-                stdscr.addstr(5, 1,  '*' + time_line_array[2] + '   *') 
-                stdscr.addstr(6, 1,  '*' + time_line_array[3] + '   *')
-                stdscr.addstr(7, 1,  '*' + time_line_array[4] + '   *')
-                stdscr.addstr(8, 1,  '*' + time_line_array[5] + '   *')
-                stdscr.addstr(9, 1,  '*' + time_line_array[6] + '   *')
-                stdscr.addstr(10, 1, '*' + time_line_array[7] + '   *')
-                stdscr.addstr(11, 1, '*                                                *')
-                spaces_notif = ' ' * ((48-len(text_filter.text_to_display))//2)
-                odd_case = (' ' if (48-len(text_filter.text_to_display)) % 2 != 0 else '')
-                stdscr.addstr(12, 1, "*" + spaces_notif + f'{text_filter.text_to_display}' +  spaces_notif + odd_case + "*")
-                for i in range(13, 19):
-                    stdscr.addstr(i, 1, '*                                                *')
-                stdscr.addstr(19, 1, '**************************************************')
-
-                stdscr.refresh()
-                time.sleep(1)
-
         elif display_tickagotchi == True:
             if tick_current == 4:
                 stdscr.addstr(1, 1, '**************************************************')
@@ -409,8 +418,8 @@ def draw_menu(stdscr):
         stdscr.refresh()
 
 def main():
+    #detect_notifications()
     curses.wrapper(draw_menu)
-    detect_notifications()
 
 if __name__ == "__main__":    
     main()  
