@@ -5,23 +5,23 @@ from nfc_lib import NfcReader
 import threading
 import socketio
 import grove_servo
-import notification_detection.ocr_pi 
-from notification_detection.text_filter import TextFilter
-from notification_detection.ocr_pi import OCR
+#import notification_detection.ocr_pi 
+#from notification_detection.text_filter import TextFilter
+#from notification_detection.ocr_pi import OCR
 
 #we need threading to run the time and the display at the same time; otherwise there will be noticeable lag.
 
 time_in_secs = 0
-text_filter = TextFilter()
-ocr = OCR()
+#text_filter = TextFilter()
+#ocr = OCR()
 
 tick_current = 4 
 start_tick = time.time()
 tick_timer = start_tick
 display_tickagotchi = False
 
-# url="https://congenial-robot-v9jxppp7w4x2xqvj-5000.app.github.dev/websocket/"
-url="https://musical-winner-pqvwr795vj6345r-5000.app.github.dev/websocket/"
+url="https://congenial-robot-v9jxppp7w4x2xqvj-5000.app.github.dev/websocket/"
+#url="https://musical-winner-pqvwr795vj6345r-5000.app.github.dev/websocket/"
 
 sio = socketio.Client()
 conn = False
@@ -36,20 +36,24 @@ while conn == False:
 @sio.on('task-complete')
 def on_task_complete():
     grove_servo.main()
-    if tick_current.value < 4:
-        tick_current += 1
     global tick_timer
+    global start_tick
+    global tick_current
+    if tick_current < 4:
+        tick_current += 1
     start_tick = time.time()
     tick_timer = start_tick
 
 @sio.on('detect-notifications')
 def detect_notifications():
-    thread = threading.Thread(target=ocr.run, args=(text_filter,))
-    thread.start()
+    pass
+#    thread = threading.Thread(target=ocr.run, args=(text_filter,))
+#    thread.start()
 
 @sio.on('stop-detecting')
 def stop_detecting():
-    ocr.terminate()
+    pass
+#    ocr.terminate()
 
 @sio.on('tickagotchi')
 def tickagotchi():
@@ -211,7 +215,7 @@ def update_display(stdscr, stop_event):
         height, width = stdscr.getmaxyx()
 
         stdscr.addstr(1, 1,  '**************************************************')
-        stdscr.addstr(2, 1,  '*                     Time on task               *')
+        stdscr.addstr(2, 1,  '*                Time on task                    *')
         stdscr.addstr(3, 1,  '**************************************************')
         stdscr.addstr(4, 1,  '*' + time_line_array[1] + '   *')
         stdscr.addstr(5, 1,  '*' + time_line_array[2] + '   *') 
@@ -221,9 +225,9 @@ def update_display(stdscr, stop_event):
         stdscr.addstr(9, 1,  '*' + time_line_array[6] + '   *')
         stdscr.addstr(10, 1, '*' + time_line_array[7] + '   *')
         stdscr.addstr(11, 1, '*                                                *')
-        spaces_notif = ' ' * ((48-len(text_filter.text_to_display))//2)
-        odd_case = (' ' if (48-len(text_filter.text_to_display)) % 2 != 0 else '')
-        stdscr.addstr(12, 1, "*" + spaces_notif + f'{text_filter.text_to_display}' +  spaces_notif + odd_case + "*")
+        #spaces_notif = ' ' * ((48-len(text_filter.text_to_display))//2)
+        #odd_case = (' ' if (48-len(text_filter.text_to_display)) % 2 != 0 else '')
+        #stdscr.addstr(12, 1, "*" + spaces_notif + f'{text_filter.text_to_display}' +  spaces_notif + odd_case + "*")
         for i in range(13, 19):
             stdscr.addstr(i, 1, '*                                                *')
         stdscr.addstr(19, 1, '**************************************************')
@@ -307,7 +311,9 @@ def draw_menu(stdscr):
             stdscr.addstr(17, 1,'*   $  $  $ $      $$$$$$$$$$$                   *')
             stdscr.addstr(18, 1,'*                                                *')
             stdscr.addstr(19, 1,'**************************************************')
-        elif display_tickagotchi == True:
+        #elif display_tickagotchi == True:
+        while display_tickagotchi:
+        
             if tick_current == 4:
                 stdscr.addstr(1, 1, '**************************************************')
                 stdscr.addstr(2, 1, '*                   TickBox                      *')
@@ -408,6 +414,18 @@ def draw_menu(stdscr):
                 stdscr.addstr(17, 1,'*           $$         $$                        *')
                 stdscr.addstr(18, 1,'*             $$$$$$$$$                          *')
                 stdscr.addstr(19, 1,'**************************************************')
+            
+            key = stdscr.getch()
+            if key == curses.KEY_UP:
+                if tick_current < 4:
+                    tick_current += 1
+                    start_tick = time.time()
+                    tick_timer = start_tick
+
+  	
+  	
+            stdscr.refresh()   
+	
         
         #Debug. Tickagotchi implementation currently accessed by up key for debug. In future, access via web pulse or on box button.
         key = stdscr.getch()
@@ -423,4 +441,3 @@ def main():
 
 if __name__ == "__main__":    
     main()  
-
