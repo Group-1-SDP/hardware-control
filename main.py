@@ -5,15 +5,15 @@ from nfc_lib import NfcReader
 import threading
 import socketio
 import grove_servo
-#import notification_detection.ocr_pi 
-#from notification_detection.text_filter import TextFilter
-#from notification_detection.ocr_pi import OCR
+import notification_detection.ocr_pi 
+from notification_detection.text_filter import TextFilter
+from notification_detection.ocr_pi import OCR
 
 #we need threading to run the time and the display at the same time; otherwise there will be noticeable lag.
 
 time_in_secs = 0
-#text_filter = TextFilter()
-#ocr = OCR()
+text_filter = TextFilter()
+ocr = OCR()
 
 tick_current = 4 
 start_tick = time.time()
@@ -46,14 +46,11 @@ def on_task_complete():
 
 @sio.on('detect-notifications')
 def detect_notifications():
-    pass
-#    thread = threading.Thread(target=ocr.run, args=(text_filter,))
-#    thread.start()
+    ocr.start()
 
 @sio.on('stop-detecting')
 def stop_detecting():
-    pass
-#    ocr.terminate()
+    ocr.terminate()
 
 @sio.on('tickagotchi')
 def tickagotchi():
@@ -225,9 +222,9 @@ def update_display(stdscr, stop_event):
         stdscr.addstr(9, 1,  '*' + time_line_array[6] + '   *')
         stdscr.addstr(10, 1, '*' + time_line_array[7] + '   *')
         stdscr.addstr(11, 1, '*                                                *')
-        #spaces_notif = ' ' * ((48-len(text_filter.text_to_display))//2)
-        #odd_case = (' ' if (48-len(text_filter.text_to_display)) % 2 != 0 else '')
-        #stdscr.addstr(12, 1, "*" + spaces_notif + f'{text_filter.text_to_display}' +  spaces_notif + odd_case + "*")
+        spaces_notif = ' ' * ((48-len(text_filter.text_to_display))//2)
+        odd_case = (' ' if (48-len(text_filter.text_to_display)) % 2 != 0 else '')
+        stdscr.addstr(12, 1, "*" + spaces_notif + f'{text_filter.text_to_display}' +  spaces_notif + odd_case + "*")
         for i in range(13, 19):
             stdscr.addstr(i, 1, '*                                                *')
         stdscr.addstr(19, 1, '**************************************************')
@@ -436,7 +433,7 @@ def draw_menu(stdscr):
         stdscr.refresh()
 
 def main():
-    #detect_notifications()
+    detect_notifications()
     curses.wrapper(draw_menu)
 
 if __name__ == "__main__":    
