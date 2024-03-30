@@ -27,20 +27,28 @@ class GroveServo:
 Grove = GroveServo
 
 def main():
-    if len(sys.argv) < 2:
-        print('Usage: {} servo_channel'.format(sys.argv[0]))
-        sys.exit(1)
-
-    servo = GroveServo(int(sys.argv[1]))
-
-    for x in range(0, 45):
-        servo.setAngle(2.5)
-        time.sleep(0.01)
+    #for x in range(0, 45):
+    #    servo.setAngle(2.5)
+    #    time.sleep(0.01)
         
+    #time.sleep(0.25)
+
+    #for x in range(0, 45):
+    #    servo.setAngle(12.5)
+    #    time.sleep(0.01)
+
+    # HARDCODED PIN ON GROVE HAT
+    pin = 12
+    servo = GroveServo(pin)
+    
+    for x in range(0, 45):
+        servo.setAngle(0)
+        time.sleep(0.01)
+
     time.sleep(0.25)
 
     for x in range(0, 45):
-        servo.setAngle(12.5)
+        servo.setAngle(75)
         time.sleep(0.01)
 
 if __name__ == '__main__':
