@@ -20,8 +20,7 @@ start_tick = time.time()
 tick_timer = start_tick
 display_tickagotchi = False
 
-url="https://congenial-robot-v9jxppp7w4x2xqvj-5000.app.github.dev/websocket/"
-#url="https://musical-winner-pqvwr795vj6345r-5000.app.github.dev/websocket/"
+url="https://obscure-invention-4x774xpv7fqxqx-5000.app.github.dev/websocket/"
 
 sio = socketio.Client()
 conn = False
@@ -35,7 +34,6 @@ while conn == False:
 
 @sio.on('task-complete')
 def on_task_complete():
-    grove_servo.main()
     global tick_timer
     global start_tick
     global tick_current
@@ -44,13 +42,21 @@ def on_task_complete():
     start_tick = time.time()
     tick_timer = start_tick
 
+@sio.on('timer-done')
+def on_timer_done():
+    #print("HASILDHI")
+    grove_servo.main()
+
 @sio.on('detect-notifications')
 def detect_notifications():
     ocr.start(text_filter)
+#    thread = threading.Thread(target=ocr.run, args=(text_filter,))
+#    thread.start()
 
 @sio.on('stop-detecting')
 def stop_detecting():
     ocr.terminate()
+#    ocr.terminate()
 
 @sio.on('tickagotchi')
 def tickagotchi():
@@ -437,4 +443,4 @@ def main():
     curses.wrapper(draw_menu)
 
 if __name__ == "__main__":    
-    main()  
+    main() 
