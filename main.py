@@ -46,7 +46,7 @@ def on_task_complete():
 
 @sio.on('detect-notifications')
 def detect_notifications():
-    ocr.start()
+    ocr.start(text_filter)
 
 @sio.on('stop-detecting')
 def stop_detecting():
