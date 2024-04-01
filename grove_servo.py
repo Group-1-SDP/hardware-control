@@ -42,13 +42,13 @@ def main():
     servo = GroveServo(pin)
     
     for x in range(0, 45):
-        servo.setAngle(0)
-        time.sleep(0.01)
+        servo.setAngle(2.5)
+        time.sleep(0.0075)
 
-    time.sleep(0.25)
+    time.sleep(0.05)
 
     for x in range(0, 45):
-        servo.setAngle(75)
+        servo.setAngle(12.5)
         time.sleep(0.01)
 
 if __name__ == '__main__':
